@@ -13,6 +13,7 @@ from src.tagging.domain.models import TagCategory, Tag, TagRule, TagRuleConditio
 from src.tagging.domain.enums import ConditionType, ConditionOperator
 
 
+
 class TestTagCategory:
 
     def test_can_create_category(self):
@@ -362,3 +363,183 @@ class TestTagRule:
         )
         with pytest.raises(ValidationError):
             rule.name = "Changed"
+
+
+
+class TestTagRuleCondition:
+
+    def test_can_create_condition(self):
+        """Basic condition creation works."""
+        condition = TagRuleCondition(
+            id="cond-1",
+            condition_type=ConditionType.KEYWORD_ANY,
+            operator=ConditionOperator.AND,
+            values=["backordered", "waiting on parts"],
+        )
+        assert condition.condition_type == ConditionType.KEYWORD_ANY
+        assert len(condition.values) == 2
+
+    def test_values_cannot_be_empty(self):
+        """
+        A condition with no values can never match anything.
+        Useless condition = bug waiting to happen.
+        """
+        with pytest.raises(ValidationError):
+            TagRuleCondition(
+                id="cond-1",
+                condition_type=ConditionType.KEYWORD_ANY,
+                operator=ConditionOperator.AND,
+                values=[],          # empty — must fail
+            )
+
+    def test_condition_is_immutable(self):
+        """Conditions cannot be modified after creation."""
+        condition = TagRuleCondition(
+            id="cond-1",
+            condition_type=ConditionType.KEYWORD_ANY,
+            operator=ConditionOperator.AND,
+            values=["backordered"],
+        )
+        with pytest.raises(ValidationError):
+            condition.values = ["changed"]
+
+    def test_serialize_to_dict(self):
+        """Must serialize for Redis caching."""
+        condition = TagRuleCondition(
+            id="cond-1",
+            condition_type=ConditionType.KEYWORD_ANY,
+            operator=ConditionOperator.AND,
+            values=["backordered"],
+        )
+        data = condition.model_dump()
+        assert data["condition_type"] == "keyword_any"
+        assert data["values"] == ["backordered"]
+
+
+class TestTagRule:
+
+    def _make_condition(self) -> TagRuleCondition:
+        """Helper to create a valid condition."""
+        return TagRuleCondition(
+            id="cond-1",
+            condition_type=ConditionType.KEYWORD_ANY,
+            operator=ConditionOperator.AND,
+            values=["backordered", "waiting on parts"],
+        )
+
+    def test_can_create_rule(self):
+        """Basic rule creation works."""
+        rule = TagRule(
+            id="rule-1",
+            tag_id="uuid-2",
+            name="Parts Delay Detection",
+            priority=100,
+            is_enabled=True,
+            conditions=[self._make_condition()],
+        )
+        assert rule.name == "Parts Delay Detection"
+        assert rule.priority == 100
+        assert len(rule.conditions) == 1
+
+    def test_rule_must_have_at_least_one_condition(self):
+        """
+        A rule with no conditions matches every note.
+        That would tag everything — catastrophic at scale.
+        Imagine 1M notes all getting wrong tags.
+        """
+        with pytest.raises(ValidationError):
+            TagRule(
+                id="rule-1",
+                tag_id="uuid-2",
+                name="Parts Delay Detection",
+                priority=100,
+                is_enabled=True,
+                conditions=[],      # empty — must fail
+            )
+
+    def test_priority_must_be_positive(self):
+        """Priority must be >= 1."""
+        with pytest.raises(ValidationError):
+            TagRule(
+                id="rule-1",
+                tag_id="uuid-2",
+                name="Parts Delay Detection",
+                priority=0,         # zero — must fail
+                is_enabled=True,
+                conditions=[self._make_condition()],
+            )
+
+    def test_name_cannot_be_empty(self):
+        """Rule name shown in admin UI — cannot be empty."""
+        with pytest.raises(ValidationError):
+            TagRule(
+                id="rule-1",
+                tag_id="uuid-2",
+                name="",            # empty — must fail
+                priority=100,
+                is_enabled=True,
+                conditions=[self._make_condition()],
+            )
+
+    def test_rule_is_immutable(self):
+        """Rules are immutable once created."""
+        rule = TagRule(
+            id="rule-1",
+            tag_id="uuid-2",
+            name="Parts Delay Detection",
+            priority=100,
+            is_enabled=True,
+            conditions=[self._make_condition()],
+        )
+        with pytest.raises(ValidationError):
+            rule.name = "Changed"
+
+    def test_rule_with_multiple_conditions(self):
+        """
+        A rule can have multiple conditions.
+        Real world example:
+          Condition 1: contains "backordered" (KEYWORD_ANY)
+          Condition 2: NOT contains "parts arrived" (KEYWORD_NONE)
+        Both must pass for Parts Delay to be applied.
+        """
+        rule = TagRule(
+            id="rule-1",
+            tag_id="uuid-2",
+            name="Parts Delay Detection",
+            priority=100,
+            is_enabled=True,
+            conditions=[
+                TagRuleCondition(
+                    id="cond-1",
+                    condition_type=ConditionType.KEYWORD_ANY,
+                    operator=ConditionOperator.AND,
+                    values=["backordered", "waiting on parts"],
+                ),
+                TagRuleCondition(
+                    id="cond-2",
+                    condition_type=ConditionType.KEYWORD_NONE,
+                    operator=ConditionOperator.AND,
+                    values=["parts arrived", "parts received"],
+                ),
+            ],
+        )
+        assert len(rule.conditions) == 2
+
+    def test_serialize_to_dict(self):
+        """Must serialize including nested conditions."""
+        rule = TagRule(
+            id="rule-1",
+            tag_id="uuid-2",
+            name="Parts Delay Detection",
+            priority=100,
+            is_enabled=True,
+            conditions=[self._make_condition()],
+        )
+        data = rule.model_dump()
+        assert data["name"] == "Parts Delay Detection"
+        assert data["priority"] == 100
+        assert len(data["conditions"]) == 1
+        assert data["conditions"][0]["values"] == [
+            "backordered",
+            "waiting on parts",
+        ]
