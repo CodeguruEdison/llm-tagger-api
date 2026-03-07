@@ -72,3 +72,18 @@ class TaggingMode(str, Enum):
     RULES_ONLY = "rules_only"
     LLM_ONLY = "llm_only"
     HYBRID = "hybrid"
+    
+class TagSource(str, Enum):
+    """
+    Which part of the pipeline applied the tag.
+
+    RULES: applied by keyword/regex rules engine
+           confidence is always 1.0 (deterministic)
+           reasoning is the rule name
+
+    LLM:   applied by LLM chain
+           confidence is 0.0-1.0 (probabilistic)
+           reasoning is LLM explanation
+    """
+    RULES = "rules"
+    LLM = "llm"

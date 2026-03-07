@@ -1,11 +1,11 @@
 
 import pytest
-from src.tagging.domain.enums import (
+from tagging.domain.enums import (
     ConditionType,
     ConditionOperator,
     TaggingMode,
+    TagSource,
 )
-
 
 class TestConditionType:
 
@@ -92,3 +92,23 @@ class TestTaggingMode:
         """
         with pytest.raises(ValueError):
             TaggingMode("invalid_mode")
+
+
+
+class TestTagSource:
+
+    def test_all_sources_exist(self):
+        assert TagSource.RULES
+        assert TagSource.LLM
+
+    def test_values_are_strings(self):
+        assert TagSource.RULES.value == "rules"
+        assert TagSource.LLM.value == "llm"
+
+    def test_reconstruct_from_string(self):
+        assert TagSource("rules") == TagSource.RULES
+        assert TagSource("llm") == TagSource.LLM
+
+    def test_invalid_source_raises(self):
+        with pytest.raises(ValueError):
+            TagSource("invalid")
