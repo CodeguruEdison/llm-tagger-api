@@ -1,0 +1,290 @@
+services:
+
+  # ─────────────────────────────────────────────
+  # FastAPI Application
+  # ─────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      target: development          # use dev stage (hot reload)
+    container_name: llm-tagger-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://tagger:tagger@pgbouncer:5432/tagger
+      - REDIS_URL=redis://redis:6379/0
+      - ARQ_REDIS_URL=redis://redis:6379/1
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma2:9b}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-5-haiku-20241022}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=http://langfuse:3000
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./src:/app/src                # hot reload in development
+      - ./tests:/app/tests
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - llm-tagger-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # access native Ollama on Mac
+
+  # ─────────────────────────────────────────────
+  # ARQ Background Worker
+  # Handles all LLM tagging jobs asynchronously
+  # This is what makes 17k req/sec possible —
+  # HTTP returns immediately, LLM runs here
+  # ─────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      target: development
+    container_name: llm-tagger-worker
+    command: python -m tagging.worker.main
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://tagger:tagger@pgbouncer:5432/tagger
+      - REDIS_URL=redis://redis:6379/0
+      - ARQ_REDIS_URL=redis://redis:6379/1
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma2:9b}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=http://langfuse:3000
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - llm-tagger-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ─────────────────────────────────────────────
+  # PostgreSQL — Application Database
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: llm-tagger-postgres
+    environment:
+      POSTGRES_USER: tagger
+      POSTGRES_PASSWORD: tagger
+      POSTGRES_DB: tagger
+      # Performance tuning for high throughput
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"                   # exposed for local tools (TablePlus, etc.)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: >
+      postgres
+        -c max_connections=200
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+        -c maintenance_work_mem=64MB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=16MB
+        -c default_statistics_target=100
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+        -c work_mem=4MB
+        -c huge_pages=off
+        -c min_wal_size=1GB
+        -c max_wal_size=4GB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tagger -d tagger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llm-tagger-network
+
+  # ─────────────────────────────────────────────
+  # pgBouncer — Connection Pooler
+  # CRITICAL for 17k req/sec.
+  # PostgreSQL max_connections=200 would be
+  # exhausted instantly without pgBouncer.
+  # pgBouncer pools thousands of app connections
+  # into ~20 real DB connections.
+  # ─────────────────────────────────────────────
+  pgbouncer:
+    image: bitnami/pgbouncer:latest
+    container_name: llm-tagger-pgbouncer
+    environment:
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_USERNAME: tagger
+      POSTGRESQL_PASSWORD: tagger
+      POSTGRESQL_DATABASE: tagger
+      PGBOUNCER_DATABASE: tagger
+      PGBOUNCER_POOL_MODE: transaction    # transaction pooling = highest throughput
+      PGBOUNCER_MAX_CLIENT_CONN: 10000   # accept up to 10k app connections
+      PGBOUNCER_DEFAULT_POOL_SIZE: 20    # maintain 20 real DB connections
+      PGBOUNCER_MIN_POOL_SIZE: 5
+      PGBOUNCER_RESERVE_POOL_SIZE: 5
+      PGBOUNCER_RESERVE_POOL_TIMEOUT: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - llm-tagger-network
+
+  # ─────────────────────────────────────────────
+  # Redis — Cache + Job Queue
+  # Two databases:
+  #   db 0 → taxonomy cache + general cache
+  #   db 1 → ARQ job queue
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: llm-tagger-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru   # evict least recently used when full
+        --save 60 1000                   # persist every 60s if 1000 keys changed
+        --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llm-tagger-network
+
+  # ─────────────────────────────────────────────
+  # Langfuse — LLM Observability (self-hosted)
+  # Access at: http://localhost:3001
+  # ─────────────────────────────────────────────
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: llm-tagger-langfuse
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:-local-dev-secret-change-in-prod}
+      SALT: ${LANGFUSE_SALT:-local-dev-salt-change-in-prod}
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "true"
+      TELEMETRY_ENABLED: "false"          # disable phone-home telemetry
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    networks:
+      - llm-tagger-network
+
+  # ─────────────────────────────────────────────
+  # Langfuse Database (separate from app DB)
+  # ─────────────────────────────────────────────
+  langfuse-db:
+    image: postgres:16-alpine
+    container_name: llm-tagger-langfuse-db
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+    ports:
+      - "5433:5432"                     # different port to avoid conflict
+    volumes:
+      - langfuse_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llm-tagger-network
+
+  # ─────────────────────────────────────────────
+  # Prometheus — Metrics Collection
+  # Access at: http://localhost:9090
+  # Scrapes FastAPI /metrics endpoint
+  # ─────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: llm-tagger-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./scripts/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    networks:
+      - llm-tagger-network
+
+  # ─────────────────────────────────────────────
+  # Grafana — Metrics Dashboard
+  # Access at: http://localhost:3002
+  # Username: admin / Password: admin
+  # ─────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: llm-tagger-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./scripts/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    depends_on:
+      - prometheus
+    networks:
+      - llm-tagger-network
+
+# ─────────────────────────────────────────────
+# Named Volumes — data persists across restarts
+# ─────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  langfuse_db_data:
+  prometheus_data:
+  grafana_data:
+
+# ─────────────────────────────────────────────
+# Network — all services talk to each other
+# ─────────────────────────────────────────────
+networks:
+  llm-tagger-network:
+    driver: bridge
