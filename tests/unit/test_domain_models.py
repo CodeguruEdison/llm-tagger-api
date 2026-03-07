@@ -9,6 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from src.tagging.domain.models import TagCategory,Tag
+from src.tagging.domain.models import TagCategory, Tag, TagRule, TagRuleCondition
+from src.tagging.domain.enums import ConditionType, ConditionOperator
 
 
 class TestTagCategory:
@@ -247,3 +249,116 @@ class TestTag:
         assert data["name"] == "Parts Delay"
         assert data["color"] == "#FF6B6B"
         assert isinstance(data, dict)
+
+
+class TestTagRuleCondition:
+
+    def test_can_create_condition(self):
+        """Basic condition creation works."""
+        condition = TagRuleCondition(
+            id="cond-1",
+            condition_type=ConditionType.KEYWORD_ANY,
+            operator=ConditionOperator.AND,
+            values=["backordered", "waiting on parts"],
+        )
+        assert condition.condition_type == ConditionType.KEYWORD_ANY
+        assert len(condition.values) == 2
+
+    def test_values_cannot_be_empty(self):
+        """A condition with no values can never match anything."""
+        with pytest.raises(ValidationError):
+            TagRuleCondition(
+                id="cond-1",
+                condition_type=ConditionType.KEYWORD_ANY,
+                operator=ConditionOperator.AND,
+                values=[],          # empty — must fail
+            )
+
+    def test_condition_is_immutable(self):
+        """Conditions are immutable once created."""
+        condition = TagRuleCondition(
+            id="cond-1",
+            condition_type=ConditionType.KEYWORD_ANY,
+            operator=ConditionOperator.AND,
+            values=["backordered"],
+        )
+        with pytest.raises(ValidationError):
+            condition.values = ["changed"]
+
+
+class TestTagRule:
+
+    def test_can_create_rule(self):
+        """Basic rule creation works."""
+        rule = TagRule(
+            id="rule-1",
+            tag_id="uuid-2",
+            name="Parts Delay Detection",
+            priority=100,
+            is_enabled=True,
+            conditions=[
+                TagRuleCondition(
+                    id="cond-1",
+                    condition_type=ConditionType.KEYWORD_ANY,
+                    operator=ConditionOperator.AND,
+                    values=["backordered", "waiting on parts"],
+                )
+            ],
+        )
+        assert rule.name == "Parts Delay Detection"
+        assert rule.priority == 100
+        assert len(rule.conditions) == 1
+
+    def test_rule_must_have_at_least_one_condition(self):
+        """
+        A rule with no conditions would match every single note.
+        That would tag everything — useless and dangerous.
+        """
+        with pytest.raises(ValidationError):
+            TagRule(
+                id="rule-1",
+                tag_id="uuid-2",
+                name="Parts Delay Detection",
+                priority=100,
+                is_enabled=True,
+                conditions=[],      # empty — must fail
+            )
+
+    def test_priority_must_be_positive(self):
+        """Priority must be >= 1."""
+        with pytest.raises(ValidationError):
+            TagRule(
+                id="rule-1",
+                tag_id="uuid-2",
+                name="Parts Delay Detection",
+                priority=0,         # zero — must fail
+                is_enabled=True,
+                conditions=[
+                    TagRuleCondition(
+                        id="cond-1",
+                        condition_type=ConditionType.KEYWORD_ANY,
+                        operator=ConditionOperator.AND,
+                        values=["backordered"],
+                    )
+                ],
+            )
+
+    def test_rule_is_immutable(self):
+        """Rules are immutable once created."""
+        rule = TagRule(
+            id="rule-1",
+            tag_id="uuid-2",
+            name="Parts Delay Detection",
+            priority=100,
+            is_enabled=True,
+            conditions=[
+                TagRuleCondition(
+                    id="cond-1",
+                    condition_type=ConditionType.KEYWORD_ANY,
+                    operator=ConditionOperator.AND,
+                    values=["backordered"],
+                )
+            ],
+        )
+        with pytest.raises(ValidationError):
+            rule.name = "Changed"

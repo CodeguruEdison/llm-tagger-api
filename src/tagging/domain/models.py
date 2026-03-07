@@ -2,6 +2,8 @@ import re
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from tagging.domain.enums import ConditionOperator, ConditionType
+
 class TagCategory(BaseModel):
     """
     Represents a category that groups related tags.
@@ -133,3 +135,57 @@ class Tag(BaseModel):
     def from_db(cls, row: dict) -> "Tag":
         """Reconstruct from a DB row."""
         return cls.model_validate(row)
+
+
+class TagRuleCondition(BaseModel):
+    """
+    A single matching condition within a TagRule.
+
+    condition_type: how to match (keyword, phrase, regex)
+    operator:       how this condition combines with others (AND/OR)
+    values:         the keywords/phrases/patterns to match against
+    """
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    condition_type: ConditionType
+    operator: ConditionOperator
+    values: list[str]
+
+    @field_validator("values")
+    @classmethod
+    def values_cannot_be_empty(cls, v: list[str]) -> list[str]:
+        if not v:
+            raise ValueError("values cannot be empty — a condition with no values can never match")
+        return v
+
+
+class TagRule(BaseModel):
+    """
+    A rule that maps conditions to a Tag.
+
+    When all/any conditions pass (per operator), the tag is applied.
+    Rules are evaluated in priority order (highest first).
+    """
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    tag_id: str
+    name: str
+    priority: int
+    is_enabled: bool
+    conditions: list[TagRuleCondition]
+
+    @field_validator("priority")
+    @classmethod
+    def priority_must_be_positive(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("priority must be >= 1")
+        return v
+
+    @field_validator("conditions")
+    @classmethod
+    def must_have_at_least_one_condition(cls, v: list[TagRuleCondition]) -> list[TagRuleCondition]:
+        if not v:
+            raise ValueError("a rule must have at least one condition")
+        return v
