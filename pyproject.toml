@@ -71,6 +71,7 @@ packages = ["src/tagging"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"                  # all async tests run automatically
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = [
     "--cov=src/tagging",               # measure coverage on our source
     "--cov-report=term-missing",       # show missing lines in terminal

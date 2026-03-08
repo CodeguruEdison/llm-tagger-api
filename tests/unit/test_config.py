@@ -7,6 +7,7 @@ Expected: RED (ModuleNotFoundError)
 """
 import pytest
 from pydantic import ValidationError
+from pydantic_settings import SettingsConfigDict
 
 from tagging.config import Settings
 from tagging.domain.enums import LLMProvider, TaggingMode
@@ -43,10 +44,22 @@ class TestSettings:
         )
         assert settings.tagging_mode == TaggingMode.RULES_ONLY
 
-    def test_database_url_required(self):
+    def test_database_url_required(self, monkeypatch):
         """Missing database URL must fail at startup."""
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        monkeypatch.delenv("REDIS_URL", raising=False)
+        monkeypatch.delenv("ARQ_REDIS_URL", raising=False)
+        monkeypatch.delenv("LLM_PROVIDER", raising=False)
+        monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
+        monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+        # Subclass disables .env file so it can't supply DATABASE_URL
+        class _Settings(Settings):
+            model_config = SettingsConfigDict(
+                **{**Settings.model_config, "env_file": None}  # type: ignore[typeddict-item]
+            )
+
         with pytest.raises(ValidationError):
-            Settings(
+            _Settings(  # type: ignore[call-arg]
                 redis_url="redis://localhost:6379/0",
                 arq_redis_url="redis://localhost:6379/1",
                 llm_provider=LLMProvider.OLLAMA,
