@@ -69,7 +69,8 @@ packages = ["src/tagging"]
 
 # --- pytest configuration ---
 [tool.pytest.ini_options]
-asyncio_mode = "auto"                  # all async tests run automatically
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"                  # all async tests run automatically
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = [
@@ -124,4 +125,9 @@ exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
+]
+
+[dependency-groups]
+dev = [
+    "psycopg2-binary>=2.9.11",
 ]

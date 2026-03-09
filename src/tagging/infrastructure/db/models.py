@@ -12,26 +12,28 @@ a DB row into a clean domain model.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import(
+from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     ForeignKey,
     Index,
     Integer,
-    JSON,
     String,
     Text,
-    func
-    
+    func,
 )
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column,relationship
-from tagging.domain.tag_category import TagCategory
+from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.domain.enums.condition_type import ConditionType
+from tagging.domain.enums.tag_source import TagSource
 from tagging.domain.tag import Tag
+from tagging.domain.tag_category import TagCategory
+from tagging.domain.tag_result import TagResult
 from tagging.domain.tag_rule import TagRule
 from tagging.domain.tag_rule_condition import TagRuleCondition
-from tagging.domain.enums.condition_type import ConditionType
-from tagging.domain.enums.condition_operator import ConditionOperator
+
 
 class Base(DeclarativeBase):
     """
@@ -135,7 +137,7 @@ class TagModel(Base):
         back_populates="tag",
         lazy="selectin",
     )
-    
+
     def to_domain(self) -> Tag:
             """Convert ORM row to domain model."""
             return Tag(
@@ -246,3 +248,45 @@ class TagRuleConditionModel(Base):
             values=self.values,
         )
 
+
+class TagResultModel(Base):
+    """Persists tag results from the pipeline."""
+    __tablename__ = "tag_results"
+
+    __table_args__ = (
+        Index("ix_tag_results_note_id", "note_id"),
+        Index("ix_tag_results_ro_id", "ro_id"),
+        Index("ix_tag_results_shop_id", "shop_id"),
+        Index("ix_tag_results_tag_id", "tag_id"),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    note_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    ro_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    shop_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    tag_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("tags.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    confidence: Mapped[float] = mapped_column(nullable=False)
+    source: Mapped[str] = mapped_column(String(20), nullable=False)
+    reasoning: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    def to_domain(self, tag: Tag) -> TagResult:
+        from tagging.domain.enums.tag_source import TagSource
+        return TagResult(
+            tag=tag,
+            confidence=self.confidence,
+            source=TagSource(self.source),
+            reasoning=self.reasoning,
+        )
