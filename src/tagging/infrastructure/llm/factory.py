@@ -93,7 +93,7 @@ class LLMFactory:
             case LLMProvider.ANTHROPIC:
                 return ChatAnthropic(
                     api_key=self.anthropic_api_key,
-                    model=self.anthropic_model,
+                    model_name=self.anthropic_model,
                     temperature=0,
                 )
 
