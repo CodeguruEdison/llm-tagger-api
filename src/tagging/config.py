@@ -48,6 +48,8 @@ class Settings(BaseSettings):
 
     # ── Tagging Pipeline ──────────────────────────────────
     tagging_mode: TaggingMode = TaggingMode.HYBRID
+    llm_confidence_threshold: float = 0.7   # ignore LLM results below this
+    rules_confidence: float = 1.0           # rules are always deterministic
 
     # ── LLM Provider ──────────────────────────────────────
     llm_provider: LLMProvider
