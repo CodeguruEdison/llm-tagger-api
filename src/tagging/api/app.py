@@ -9,7 +9,7 @@ Why a factory function (create_app) instead of a module-level app:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from tagging.api.routers import health,tagging
+from tagging.api.routers import health,tagging,taxonomy
 from tagging.config import get_settings
 
 
@@ -38,6 +38,7 @@ def create_app() -> FastAPI:
     # Routers
     app.include_router(health.router)
     app.include_router(tagging.router)
+    app.include_router(taxonomy.router)
 
     return app
 
