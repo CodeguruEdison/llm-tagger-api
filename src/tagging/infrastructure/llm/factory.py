@@ -72,7 +72,6 @@ class LLMFactory:
                     base_url=self.ollama_base_url,
                     model=self.ollama_model,
                     temperature=0,      # deterministic output
-                    format="json",      # always return JSON
                 )
 
             case LLMProvider.OPENAI:

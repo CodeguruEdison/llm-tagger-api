@@ -130,6 +130,10 @@ class LLMChain:
           - missing required fields
         """
         try:
+            if not isinstance(item, dict):
+                logger.debug("LLM returned non-dict item: %r", item)
+                return None
+
             slug = item.get("tag_slug", "")
             confidence = float(item.get("confidence", 0.0))
             reasoning = item.get("reasoning", "")

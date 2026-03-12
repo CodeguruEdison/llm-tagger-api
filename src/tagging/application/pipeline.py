@@ -83,7 +83,7 @@ def run_rules_node(state: PipelineState) -> dict:
     return {"rules_results": results}
 
 
-def run_llm_node(state: PipelineState) -> dict:
+async def run_llm_node(state: PipelineState) -> dict:
     """
     Smart path: ask LLM to tag the note.
 
@@ -100,7 +100,7 @@ def run_llm_node(state: PipelineState) -> dict:
         return {"llm_results": []}
 
     try:
-        results = llm_chain(
+        results = await llm_chain.run(
             context=state["context"],
             tags=state["tags"],
             threshold=state["llm_confidence_threshold"],
