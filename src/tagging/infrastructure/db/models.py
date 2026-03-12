@@ -196,6 +196,7 @@ class TagRuleModel(Base):
         back_populates="rule",
         lazy="selectin",
         order_by="TagRuleConditionModel.created_at",
+        cascade="all, delete-orphan",
     )
     def to_domain(self) -> TagRule:
         """Convert ORM row to domain model including conditions."""

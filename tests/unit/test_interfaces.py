@@ -63,6 +63,30 @@ class MockTagRepository(ITagRepository):
             for context, result in self._results
             if context.note_id == note_id
         ]
+    async def get_all_rules(self) -> list[TagRule]:
+        return self._rules
+
+    async def get_rule_by_id(self, rule_id: str) -> TagRule | None:
+        return next((r for r in self._rules if r.id == rule_id), None)
+
+    async def update_rule(self, rule: TagRule) -> TagRule:
+        self._rules = [r if r.id != rule.id else rule for r in self._rules]
+        return rule
+
+    async def delete_rule(self, rule_id: str) -> None:
+        self._rules = [r for r in self._rules if r.id != rule_id]
+
+    async def create_category(self, category: TagCategory) -> TagCategory:
+        self._categories.append(category)
+        return category
+
+    async def create_tag(self, tag: Tag) -> Tag:
+        self._tags.append(tag)
+        return tag
+
+    async def create_rule(self, rule: TagRule) -> TagRule:
+        self._rules.append(rule)
+        return rule
 
 
 class TestITagRepository:
@@ -200,3 +224,4 @@ class TestITagRepository:
         result = await repo.get_all_active_rules()
         assert len(result) == 1
         assert result[0].name == "Active Rule"
+    

@@ -175,3 +175,64 @@ class TagRepository(ITagRepository):
 
         await self._session.flush()
         return rule
+    async def get_all_rules(self) -> list[TagRule]:
+        """Get all rules regardless of enabled status."""
+        result = await self._session.execute(
+            select(TagRuleModel)
+            .order_by(TagRuleModel.priority.desc())
+        )
+        return [row.to_domain() for row in result.scalars().all()]
+
+    async def get_rule_by_id(
+        self, rule_id: str
+    ) -> TagRule | None:
+        """Get a single rule by ID. Returns None if not found."""
+        result = await self._session.get(TagRuleModel, rule_id)
+        if not result:
+            return None
+        return result.to_domain()
+
+    async def update_rule(self, rule: TagRule) -> TagRule:
+        """
+        Update an existing rule and replace all its conditions.
+
+        Why replace all conditions:
+          Simpler than diffing old vs new conditions.
+          Conditions cascade delete — clean slate on every update.
+        """
+        orm = await self._session.get(TagRuleModel, rule.id)
+        if not orm:
+            raise ValueError(f"Rule not found: {rule.id}")
+
+        # Update rule fields
+        orm.name = rule.name
+        orm.priority = rule.priority
+        orm.is_enabled = rule.is_enabled
+
+        # Delete existing conditions (CASCADE would handle this
+        # but we do it explicitly for clarity)
+        for condition in orm.conditions:
+            await self._session.delete(condition)
+        await self._session.flush()
+
+        # Add new conditions
+        for condition in rule.conditions:
+            cond_orm = TagRuleConditionModel(
+                id=condition.id,
+                rule_id=rule.id,
+                condition_type=condition.condition_type.value,
+                operator=condition.operator.value,
+                values=condition.values,
+            )
+            self._session.add(cond_orm)
+
+        await self._session.flush()
+        return rule
+
+    async def delete_rule(self, rule_id: str) -> None:
+        """Delete a rule — conditions cascade automatically."""
+        orm = await self._session.get(TagRuleModel, rule_id)
+        if not orm:
+            raise ValueError(f"Rule not found: {rule_id}")
+        await self._session.delete(orm)
+        await self._session.flush()

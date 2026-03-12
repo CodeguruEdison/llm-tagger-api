@@ -63,15 +63,22 @@ async def db_engine(postgres_container):
     await engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def db_session(db_engine):
-    """Single async session shared across the test session."""
-    factory = async_sessionmaker(db_engine, class_=AsyncSession, expire_on_commit=False)
-    async with factory() as session:
-        yield session
+    """Each test gets its own connection with rollback after."""
+    async with db_engine.connect() as conn:
+        await conn.begin()
+        async_session = async_sessionmaker(
+            bind=conn,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+        async with async_session() as session:
+            yield session
+        await conn.rollback()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def repository(db_session):
     """TagRepository instance with real DB session."""
     return TagRepository(session=db_session)
@@ -81,15 +88,13 @@ async def repository(db_session):
 # Helper fixtures — test data
 # ─────────────────────────────────────────────
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def sample_category(repository) -> TagCategory:
-    """Create and persist a sample category."""
-    uid = uuid.uuid4().hex[:8]
     return await repository.create_category(
         TagCategory(
-            id=f"cat-{uid}",
+            id="cat-1",
             name="Parts",
-            slug=f"parts-{uid}",
+            slug="parts",
             description="Parts related issues",
             is_active=True,
             sort_order=1,
@@ -97,16 +102,15 @@ async def sample_category(repository) -> TagCategory:
     )
 
 
-@pytest_asyncio.fixture(scope="session")
+
+@pytest_asyncio.fixture
 async def sample_tag(repository, sample_category) -> Tag:
-    """Create and persist a sample tag."""
-    uid = uuid.uuid4().hex[:8]
     return await repository.create_tag(
         Tag(
-            id=f"tag-{uid}",
+            id="tag-1",
             category_id=sample_category.id,
             name="Parts Delay",
-            slug=f"parts-delay-{uid}",
+            slug="parts-delay",
             description="RO waiting on parts",
             color="#FF6B6B",
             icon="clock",
@@ -217,3 +221,75 @@ class TestTagRepository:
         assert retrieved[0].tag.slug == sample_tag.slug
         assert retrieved[0].confidence == 1.0
         assert retrieved[0].source == TagSource.RULES
+    async def test_get_all_rules(self, repository, sample_tag):
+        """Can retrieve all rules."""
+        await repository.create_rule(
+            TagRule(
+                id="rule-all-1",
+                tag_id=sample_tag.id,
+                name="All Rules Test",
+                priority=50,
+                is_enabled=False,
+                conditions=[
+                    TagRuleCondition(
+                        id="cond-all-1",
+                        condition_type=ConditionType.KEYWORD_ANY,
+                        operator=ConditionOperator.AND,
+                        values=["test"],
+                    )
+                ],
+            )
+        )
+        rules = await repository.get_all_rules()
+        assert len(rules) >= 1
+
+    async def test_get_rule_by_id(self, repository, sample_tag):
+        """Can retrieve a single rule by ID."""
+        await repository.create_rule(
+            TagRule(
+                id="rule-byid-1",
+                tag_id=sample_tag.id,
+                name="Get By ID Test",
+                priority=50,
+                is_enabled=True,
+                conditions=[
+                    TagRuleCondition(
+                        id="cond-byid-1",
+                        condition_type=ConditionType.KEYWORD_ANY,
+                        operator=ConditionOperator.AND,
+                        values=["test"],
+                    )
+                ],
+            )
+        )
+        rule = await repository.get_rule_by_id("rule-byid-1")
+        assert rule is not None
+        assert rule.name == "Get By ID Test"
+
+    async def test_get_rule_by_id_not_found(self, repository):
+        """Returns None when rule not found."""
+        rule = await repository.get_rule_by_id("nonexistent")
+        assert rule is None
+
+    async def test_delete_rule(self, repository, sample_tag):
+        """Can delete a rule."""
+        await repository.create_rule(
+            TagRule(
+                id="rule-del-1",
+                tag_id=sample_tag.id,
+                name="Delete Test",
+                priority=50,
+                is_enabled=True,
+                conditions=[
+                    TagRuleCondition(
+                        id="cond-del-1",
+                        condition_type=ConditionType.KEYWORD_ANY,
+                        operator=ConditionOperator.AND,
+                        values=["test"],
+                    )
+                ],
+            )
+        )
+        await repository.delete_rule("rule-del-1")
+        rule = await repository.get_rule_by_id("rule-del-1")
+        assert rule is None

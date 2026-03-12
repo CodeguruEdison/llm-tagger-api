@@ -76,4 +76,37 @@ class ITagRepository(ABC):
         Used by API to return current tags on a note.
         """
         raise NotImplementedError
-    
+    @abstractmethod
+    async def get_all_rules(self) -> list[TagRule]:
+        """Get all rules regardless of enabled status."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_rule_by_id(self, rule_id: str) -> TagRule | None:
+        """Get a single rule by ID. Returns None if not found."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_rule(self, rule: TagRule) -> TagRule:
+        """Update an existing rule and its conditions."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_rule(self, rule_id: str) -> None:
+        """Delete a rule and its conditions (CASCADE)."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_category(self, category: TagCategory) -> TagCategory:
+        """Create a new category."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_tag(self, tag: Tag) -> Tag:
+        """Create a new tag."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_rule(self, rule: TagRule) -> TagRule:
+        """Create a new rule with conditions."""
+        raise NotImplementedError
