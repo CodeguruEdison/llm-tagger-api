@@ -25,7 +25,9 @@ async def get_db_session(
     settings: Settings = Depends(get_settings_dep),
 ) -> AsyncGenerator[AsyncSession, None]:
     """Create a DB session for the request, close after."""
-    engine = create_async_engine(settings.database_url)
+    # Prefer direct Postgres URL when set (avoids pgBouncer auth issues with asyncpg)
+    url = settings.direct_database_url or settings.database_url
+    engine = create_async_engine(url)
     async_session = async_sessionmaker(
         bind=engine,
         class_=AsyncSession,

@@ -38,6 +38,7 @@ class Settings(BaseSettings):
 
     # ── Database ──────────────────────────────────────────
     database_url: str
+    direct_database_url: Optional[str] = None  # use when pgBouncer causes auth issues (e.g. Docker)
     database_pool_size: int = 20
     database_max_overflow: int = 10
 

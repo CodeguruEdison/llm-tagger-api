@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv — fast Python package manager
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv — fast Python package manager (in /usr/local so entrypoint as tagger can run it)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    mv /root/.local/bin/uv /usr/local/bin/uv && \
+    ln -sf /usr/local/bin/uv /usr/local/bin/uvx 2>/dev/null || true
 
 WORKDIR /app
 
@@ -31,11 +33,10 @@ WORKDIR /app
 FROM base AS dependencies
 
 # Copy dependency files first (for layer caching)
-COPY pyproject.toml .
-COPY README.md .
+COPY pyproject.toml uv.lock ./
 
-# Install production dependencies only
-RUN uv sync --no-dev
+# Install production dependencies only (not the project itself — src/ not copied yet)
+RUN uv sync --no-dev --no-install-project --frozen
 
 # ─────────────────────────────────────────────
 # Stage 3: development
@@ -44,28 +45,30 @@ RUN uv sync --no-dev
 # ─────────────────────────────────────────────
 FROM dependencies AS development
 
-# Install ALL dependencies including dev
-RUN uv sync
-
-# Copy source code
+# Copy source code first so the project can be installed
 COPY src/ ./src/
 COPY tests/ ./tests/
 COPY alembic/ ./alembic/
 COPY alembic.ini .
+COPY scripts/entrypoint.sh ./scripts/entrypoint.sh
+
+# Install ALL dependencies including dev + the project itself
+RUN uv sync --frozen
 
 # Non-root user for security (even in dev)
 RUN groupadd -r tagger && useradd -r -g tagger tagger
-RUN chown -R tagger:tagger /app
+RUN chown -R tagger:tagger /app && chmod +x ./scripts/entrypoint.sh
 USER tagger
 
 EXPOSE 8000
 
-# Hot reload enabled in development
-CMD ["uv", "run", "uvicorn", "tagging.api.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--reload", \
-     "--reload-dir", "src"]
+# Run migrations then start the app
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
+CMD ["uv", "run", "uvicorn", "tagging.api.app:app", \
+    "--host", "0.0.0.0", \
+    "--port", "8000", \
+    "--reload", \
+    "--reload-dir", "src"]
 
 # ─────────────────────────────────────────────
 # Stage 4: production
@@ -82,6 +85,9 @@ COPY src/ ./src/
 COPY alembic/ ./alembic/
 COPY alembic.ini .
 
+# Install the project itself (prod deps already in venv from dependencies stage)
+RUN uv sync --no-dev --frozen
+
 # Non-root user — security best practice
 RUN groupadd -r tagger && useradd -r -g tagger tagger
 RUN chown -R tagger:tagger /app
@@ -95,10 +101,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Multiple workers for production scale
 # Formula: (2 × CPU cores) + 1
 # Override with WORKERS env var in Kubernetes
-CMD ["sh", "-c", "uv run uvicorn tagging.api.main:app \
-     --host 0.0.0.0 \
-     --port 8000 \
-     --workers ${WORKERS:-4} \
-     --loop uvloop \
-     --http httptools \
-     --log-level ${LOG_LEVEL:-info}"]
+CMD ["sh", "-c", "uv run uvicorn tagging.api.app:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers ${WORKERS:-4} \
+    --loop uvloop \
+    --http httptools \
+    --log-level ${LOG_LEVEL:-info}"]

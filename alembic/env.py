@@ -20,8 +20,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Override with real DATABASE_URL from environment
-database_url = os.environ.get("DATABASE_URL", "")
+# Migrations bypass pgBouncer (direct connection required for DDL + SCRAM-SHA-256 compat)
+database_url = os.environ.get("DIRECT_DATABASE_URL") or os.environ.get("DATABASE_URL", "")
 if not database_url:
     raise ValueError("DATABASE_URL environment variable is required")
 

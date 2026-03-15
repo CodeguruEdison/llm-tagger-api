@@ -12,6 +12,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://tagger:tagger@pgbouncer:5432/tagger
+      - DIRECT_DATABASE_URL=postgresql+asyncpg://tagger:tagger@postgres:5432/tagger
       - REDIS_URL=redis://redis:6379/0
       - ARQ_REDIS_URL=redis://redis:6379/1
       - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
@@ -29,9 +30,11 @@ services:
       - LANGFUSE_HOST=http://langfuse:3000
       - ENVIRONMENT=development
       - LOG_LEVEL=INFO
+      - UV_CACHE_DIR=/app/.cache/uv
     volumes:
       - ./src:/app/src                # hot reload in development
       - ./tests:/app/tests
+      - ./alembic:/app/alembic
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,7 +64,7 @@ services:
       context: .
       target: development
     container_name: llm-tagger-worker
-    command: python -m tagging.worker.main
+    command: uv run python -m tagging.worker.main
     environment:
       - DATABASE_URL=postgresql+asyncpg://tagger:tagger@pgbouncer:5432/tagger
       - REDIS_URL=redis://redis:6379/0
@@ -79,6 +82,7 @@ services:
       - LANGFUSE_HOST=http://langfuse:3000
       - ENVIRONMENT=development
       - LOG_LEVEL=INFO
+      - UV_CACHE_DIR=/app/.cache/uv
     volumes:
       - ./src:/app/src
     depends_on:
@@ -86,6 +90,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      pgbouncer:
+        condition: service_started
     networks:
       - llm-tagger-network
     extra_hosts:
@@ -140,21 +146,21 @@ services:
   # into ~20 real DB connections.
   # ─────────────────────────────────────────────
   pgbouncer:
-    image: bitnami/pgbouncer:latest
+    image: edoburu/pgbouncer:latest
     container_name: llm-tagger-pgbouncer
     environment:
-      POSTGRESQL_HOST: postgres
-      POSTGRESQL_PORT: 5432
-      POSTGRESQL_USERNAME: tagger
-      POSTGRESQL_PASSWORD: tagger
-      POSTGRESQL_DATABASE: tagger
-      PGBOUNCER_DATABASE: tagger
-      PGBOUNCER_POOL_MODE: transaction    # transaction pooling = highest throughput
-      PGBOUNCER_MAX_CLIENT_CONN: 10000   # accept up to 10k app connections
-      PGBOUNCER_DEFAULT_POOL_SIZE: 20    # maintain 20 real DB connections
-      PGBOUNCER_MIN_POOL_SIZE: 5
-      PGBOUNCER_RESERVE_POOL_SIZE: 5
-      PGBOUNCER_RESERVE_POOL_TIMEOUT: 5
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: tagger
+      DB_PASSWORD: tagger
+      DB_NAME: tagger
+      POOL_MODE: transaction             # transaction pooling = highest throughput
+      MAX_CLIENT_CONN: 10000            # accept up to 10k app connections
+      DEFAULT_POOL_SIZE: 20             # maintain 20 real DB connections
+      MIN_POOL_SIZE: 5
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 5
+      SERVER_RESET_QUERY: ""            # required for transaction pool mode
     depends_on:
       postgres:
         condition: service_healthy
@@ -171,12 +177,12 @@ services:
     image: redis:7-alpine
     container_name: llm-tagger-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: >
       redis-server
         --maxmemory 512mb
-        --maxmemory-policy allkeys-lru   # evict least recently used when full
-        --save 60 1000                   # persist every 60s if 1000 keys changed
+        --maxmemory-policy allkeys-lru
+        --save 60 1000
         --loglevel warning
     volumes:
       - redis_data:/data
@@ -193,7 +199,7 @@ services:
   # Access at: http://localhost:3001
   # ─────────────────────────────────────────────
   langfuse:
-    image: langfuse/langfuse:latest
+    image: langfuse/langfuse:2
     container_name: llm-tagger-langfuse
     ports:
       - "3001:3000"
@@ -221,7 +227,7 @@ services:
       POSTGRES_PASSWORD: langfuse
       POSTGRES_DB: langfuse
     ports:
-      - "5433:5432"                     # different port to avoid conflict
+      - "5436:5432"                     # different port to avoid conflict
     volumes:
       - langfuse_db_data:/var/lib/postgresql/data
     healthcheck:
