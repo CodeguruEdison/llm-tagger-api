@@ -1,0 +1,18 @@
+{
+  "words": [
+    "Buildx",
+    "buildx",
+    "psycopg",
+    "asyncio",
+    "pytest",
+    "mypy",
+    "langfuse",
+    "clickhouse",
+    "pgbouncer",
+    "uvicorn",
+    "pydantic",
+    "alembic",
+    "locust",
+    "arq"
+  ]
+}
