@@ -6,14 +6,15 @@ All tests use mocked LLM — no real API calls.
 
 Run: uv run pytest tests/unit/test_llm_chain.py -v
 """
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 from langchain_core.messages import AIMessage
 
-from tagging.infrastructure.llm.chain import LLMChain
-from tagging.domain.tag import Tag
-from tagging.domain.note_context import NoteContext
 from tagging.domain.enums.tag_source import TagSource
+from tagging.domain.note_context import NoteContext
+from tagging.domain.tag import Tag
+from tagging.infrastructure.llm.chain import LLMChain
 
 
 def make_tag(id="tag-1", slug="parts-delay") -> Tag:

@@ -8,16 +8,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tagging.application.interfaces import ITagRepository
-from tagging.domain.tag_category import TagCategory
-from tagging.domain.tag import Tag
-from tagging.domain.tag_rule import TagRule
-from tagging.domain.tag_result import TagResult
 from tagging.domain.note_context import NoteContext
+from tagging.domain.tag import Tag
+from tagging.domain.tag_category import TagCategory
+from tagging.domain.tag_result import TagResult
+from tagging.domain.tag_rule import TagRule
 from tagging.infrastructure.db.models import (
     TagCategoryModel,
     TagModel,
-    TagRuleModel,
     TagRuleConditionModel,
+    TagRuleModel,
 )
 
 

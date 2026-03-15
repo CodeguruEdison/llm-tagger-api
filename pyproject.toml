@@ -8,32 +8,26 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",       # [standard] includes uvloop + httptools for performance
     "python-multipart>=0.0.9",         # required for FastAPI form data
-
     # --- Database ---
     "sqlalchemy[asyncio]>=2.0.0",      # async ORM - critical for 17k req/sec
     "asyncpg>=0.29.0",                 # async PostgreSQL driver (fastest available)
     "alembic>=1.13.0",                 # database migrations
-
     # --- Cache & Queue ---
     "redis[hiredis]>=5.0.0",           # [hiredis] = C parser, ~10x faster than pure Python
     "arq>=0.25.0",                     # async job queue built on Redis
-
     # --- LangChain + Providers ---
     "langchain>=0.3.0",
     "langchain-community>=0.3.0",
     "langchain-ollama>=0.2.0",         # Ollama provider (home / local)
     "langchain-openai>=0.2.0",         # OpenAI + Azure OpenAI provider
     "langchain-anthropic>=0.3.0",      # Anthropic provider
-
     # --- Observability ---
     "langfuse>=2.0.0",                 # LLM tracing (self-hosted)
     "prometheus-fastapi-instrumentator>=7.0.0",  # Prometheus metrics for scale monitoring
-
     # --- Config & Validation ---
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",        # settings from env vars
     "python-dotenv>=1.0.0",
-
     # --- Resilience ---
     "tenacity>=8.2.0",                 # retry logic for LLM calls and DB connections
 ]

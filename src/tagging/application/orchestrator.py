@@ -16,9 +16,9 @@ from typing import Optional
 
 from tagging.application.interfaces import ITagRepository
 from tagging.application.pipeline import PIPELINE, PipelineState
+from tagging.domain.enums.tagging_mode import TaggingMode
 from tagging.domain.note_context import NoteContext
 from tagging.domain.tag_result import TagResult
-from tagging.domain.enums.tagging_mode import TaggingMode
 
 logger = logging.getLogger(__name__)
 

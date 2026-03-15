@@ -10,11 +10,11 @@ from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from tagging.application.orchestrator import Orchestrator
 from tagging.config import get_settings, Settings
 from tagging.infrastructure.db.repository import TagRepository
-from tagging.infrastructure.llm.factory import LLMFactory
 from tagging.infrastructure.llm.chain import LLMChain
-from tagging.application.orchestrator import Orchestrator
+from tagging.infrastructure.llm.factory import LLMFactory
 
 
 def get_settings_dep() -> Settings:

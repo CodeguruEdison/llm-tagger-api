@@ -7,20 +7,21 @@ No DB, no real LLM calls.
 
 Run: uv run pytest tests/unit/test_orchestrator.py -v
 """
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from tagging.application.orchestrator import Orchestrator
+import pytest
+
 from tagging.application.interfaces import ITagRepository
-from tagging.domain.tag import Tag
-from tagging.domain.tag_rule import TagRule
-from tagging.domain.tag_rule_condition import TagRuleCondition
-from tagging.domain.note_context import NoteContext
-from tagging.domain.tag_result import TagResult
+from tagging.application.orchestrator import Orchestrator
+from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.domain.enums.condition_type import ConditionType
 from tagging.domain.enums.tagging_mode import TaggingMode
 from tagging.domain.enums.tag_source import TagSource
-from tagging.domain.enums.condition_type import ConditionType
-from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.domain.note_context import NoteContext
+from tagging.domain.tag import Tag
+from tagging.domain.tag_result import TagResult
+from tagging.domain.tag_rule import TagRule
+from tagging.domain.tag_rule_condition import TagRuleCondition
 
 
 def make_tag(id="tag-1", slug="parts-delay") -> Tag:

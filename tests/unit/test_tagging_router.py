@@ -1,13 +1,14 @@
 """Unit tests for tagging router."""
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from tagging.api.app import create_app
 from tagging.api.dependencies import get_orchestrator
+from tagging.domain.enums.tag_source import TagSource
 from tagging.domain.tag import Tag
 from tagging.domain.tag_result import TagResult
-from tagging.domain.enums.tag_source import TagSource
 
 
 def make_tag_result() -> TagResult:

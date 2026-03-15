@@ -6,18 +6,18 @@ GET /taxonomy/categories   ← list categories
 GET /taxonomy/tags         ← list all tags
 """
 import uuid
-from fastapi import APIRouter, Depends,status
+from fastapi import APIRouter, Depends, status
 
 from tagging.api.dependencies import get_repository
 from tagging.api.schemas import (
     CategoryResponse,
-    TagResponse,
-    TaxonomyResponse,
     CreateCategoryRequest,
     CreateTagRequest,
+    TagResponse,
+    TaxonomyResponse,
 )
-from tagging.domain.tag_category import TagCategory
 from tagging.domain.tag import Tag
+from tagging.domain.tag_category import TagCategory
 from tagging.infrastructure.db.repository import TagRepository
 
 router = APIRouter(prefix="/taxonomy", tags=["taxonomy"])

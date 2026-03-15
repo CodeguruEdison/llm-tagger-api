@@ -13,13 +13,12 @@ from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
 
-from langchain_ollama import ChatOllama
-
-from langchain_openai import AzureChatOpenAI,ChatOpenAI
-
 from langchain_anthropic import ChatAnthropic
+from langchain_ollama import ChatOllama
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 from tagging.domain.enums.llm_provider import LLMProvider
+
 
 class LLMFactory:
     """

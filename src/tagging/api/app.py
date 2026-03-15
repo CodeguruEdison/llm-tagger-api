@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from tagging.api.routers import health,tagging,taxonomy,rules
+from tagging.api.routers import health, rules, tagging, taxonomy
 from tagging.config import get_settings
 
 

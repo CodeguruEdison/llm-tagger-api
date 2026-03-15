@@ -1,9 +1,9 @@
-import pytest
-
 from unittest.mock import patch
 
-from tagging.infrastructure.llm.factory import LLMFactory
+import pytest
+
 from tagging.domain.enums.llm_provider import LLMProvider
+from tagging.infrastructure.llm.factory import LLMFactory
 
 
 class TestLLMFactory:

@@ -10,13 +10,13 @@ Pipeline position:
 """
 import re
 
+from tagging.domain.enums.condition_type import ConditionType
+from tagging.domain.enums.tag_source import TagSource
 from tagging.domain.note_context import NoteContext
 from tagging.domain.tag import Tag
 from tagging.domain.tag_rule import TagRule
 from tagging.domain.tag_rule_condition import TagRuleCondition
 from tagging.domain.tag_result import TagResult
-from tagging.domain.enums.condition_type import ConditionType
-from tagging.domain.enums.tag_source import TagSource
 
 
 class RulesEngine:

@@ -1,12 +1,13 @@
 """Unit tests for taxonomy router."""
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from tagging.api.app import create_app
 from tagging.api.dependencies import get_repository
-from tagging.domain.tag_category import TagCategory
 from tagging.domain.tag import Tag
+from tagging.domain.tag_category import TagCategory
 
 
 def make_category() -> TagCategory:

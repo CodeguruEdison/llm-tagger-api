@@ -30,13 +30,13 @@ from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph, START, END
 
-from tagging.domain.note_context import NoteContext
-from tagging.domain.tag import Tag
-from tagging.domain.tag_rule import TagRule
-from tagging.domain.tag_result import TagResult
+from tagging.application.rules_engine import RulesEngine
 from tagging.domain.enums.tagging_mode import TaggingMode
 from tagging.domain.enums.tag_source import TagSource
-from tagging.application.rules_engine import RulesEngine
+from tagging.domain.note_context import NoteContext
+from tagging.domain.tag import Tag
+from tagging.domain.tag_result import TagResult
+from tagging.domain.tag_rule import TagRule
 
 
 # ─────────────────────────────────────────────

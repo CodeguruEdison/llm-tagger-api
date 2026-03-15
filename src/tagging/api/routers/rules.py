@@ -13,15 +13,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from tagging.api.dependencies import get_repository
 from tagging.api.schemas import (
     CreateRuleRequest,
-    UpdateRuleRequest,
-    RuleResponse,
     RuleConditionResponse,
+    RuleResponse,
+    UpdateRuleRequest,
 )
-from tagging.infrastructure.db.repository import TagRepository
+from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.domain.enums.condition_type import ConditionType
 from tagging.domain.tag_rule import TagRule
 from tagging.domain.tag_rule_condition import TagRuleCondition
-from tagging.domain.enums.condition_type import ConditionType
-from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.infrastructure.db.repository import TagRepository
 
 router = APIRouter(prefix="/rules", tags=["rules"])
 

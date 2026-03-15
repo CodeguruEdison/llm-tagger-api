@@ -12,14 +12,14 @@ Expected: GREEN (interface + mock are pure Python, no DB needed)
 import pytest
 
 from tagging.application.interfaces import ITagRepository
-from tagging.domain.tag_category import TagCategory
-from tagging.domain.tag import Tag
-from tagging.domain.tag_rule import TagRule
-from tagging.domain.tag_result import TagResult
-from tagging.domain.note_context import NoteContext
-from tagging.domain.enums.tag_source import TagSource
-from tagging.domain.enums.condition_type import ConditionType
 from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.domain.enums.condition_type import ConditionType
+from tagging.domain.enums.tag_source import TagSource
+from tagging.domain.note_context import NoteContext
+from tagging.domain.tag import Tag
+from tagging.domain.tag_category import TagCategory
+from tagging.domain.tag_result import TagResult
+from tagging.domain.tag_rule import TagRule
 from tagging.domain.tag_rule_condition import TagRuleCondition
 
 

@@ -1,14 +1,15 @@
 """Unit tests for rules router."""
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from tagging.api.app import create_app
 from tagging.api.dependencies import get_repository
+from tagging.domain.enums.condition_operator import ConditionOperator
+from tagging.domain.enums.condition_type import ConditionType
 from tagging.domain.tag_rule import TagRule
 from tagging.domain.tag_rule_condition import TagRuleCondition
-from tagging.domain.enums.condition_type import ConditionType
-from tagging.domain.enums.condition_operator import ConditionOperator
 
 
 def make_rule(rule_id="rule-1") -> TagRule:
