@@ -22,7 +22,7 @@ dependencies = [
     "langchain-openai>=0.2.0",         # OpenAI + Azure OpenAI provider
     "langchain-anthropic>=0.3.0",      # Anthropic provider
     # --- Observability ---
-    "langfuse>=2.0.0",                 # LLM tracing (self-hosted)
+    "langfuse>=3.0.0",                 # LLM tracing (self-hosted)
     "prometheus-fastapi-instrumentator>=7.0.0",  # Prometheus metrics for scale monitoring
     # --- Config & Validation ---
     "pydantic>=2.0.0",

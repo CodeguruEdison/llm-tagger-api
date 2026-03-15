@@ -1,6 +1,7 @@
 """
 Orchestrator — entry point to the tagging pipeline.
 
+
 Responsibilities:
   1. Load taxonomy from DB (tags + rules)
   2. Build LLMChain if needed
@@ -14,6 +15,7 @@ Everything else is injected — easy to test, easy to swap.
 Langfuse: pass langfuse_handler so the full pipeline run is traced as one trace
 in Langfuse (with nested LLM spans from the chain).
 """
+import asyncio
 import logging
 from typing import Any
 
@@ -47,13 +49,13 @@ class Orchestrator:
         tagging_mode: TaggingMode = TaggingMode.HYBRID,
         llm_confidence_threshold: float = 0.7,
         llm_chain: object | None = None,
-        langfuse_handler: Any | None = None,
+        langfuse_client: Any | None = None,
     ) -> None:
         self._repository = repository
         self._tagging_mode = tagging_mode
         self._llm_confidence_threshold = llm_confidence_threshold
         self._llm_chain = llm_chain
-        self._langfuse_handler = langfuse_handler
+        self._langfuse_client = langfuse_client
 
     async def tag_note(
         self, context: NoteContext
@@ -89,11 +91,11 @@ class Orchestrator:
                 error=None,
             )
 
-            # Run pipeline (with Langfuse callback so full run is one trace)
-            run_config = {}
-            if self._langfuse_handler:
-                run_config["callbacks"] = [self._langfuse_handler]
-            result_state = await PIPELINE.ainvoke(state, config=run_config)
+            result_state = await PIPELINE.ainvoke(state)
+
+            # Flush Langfuse so traces appear immediately in the dashboard
+            from tagging.infrastructure.observability import flush_langfuse
+            await asyncio.to_thread(flush_langfuse, self._langfuse_client)
 
             # Log any LLM errors — pipeline still returns rules results
             if result_state.get("error"):

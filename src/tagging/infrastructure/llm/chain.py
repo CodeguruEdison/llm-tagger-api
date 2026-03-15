@@ -9,15 +9,14 @@ Responsibilities:
   5. Filter by confidence threshold
   6. Never crash — return empty list on any failure
 
-Langfuse: pass langfuse_handler from get_langfuse_callback_handler() so every
-LLM call is traced in Langfuse via the callback middleware.
+Langfuse: a per-request CallbackHandler is created inside run() so each LLM
+call is automatically traced as a Langfuse session keyed to the note_id.
+No manual trace/generation code needed — the v3 SDK handles it via OTEL.
 """
 import json
 import logging
-from typing import Any
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnableConfig
 
 from tagging.domain.enums.tag_source import TagSource
 from tagging.domain.note_context import NoteContext
@@ -33,25 +32,12 @@ class LLMChain:
     Wraps a LangChain LLM with our tagging prompt and output parsing.
 
     Usage:
-        handler = get_langfuse_callback_handler()
-        chain = LLMChain(llm=factory.create(), langfuse_handler=handler)
+        chain = LLMChain(llm=factory.create())
         results = await chain.run(context, tags, threshold=0.7)
     """
 
-    def __init__(
-        self,
-        llm: BaseChatModel,
-        *,
-        langfuse_handler: Any | None = None,
-    ) -> None:
+    def __init__(self, llm: BaseChatModel) -> None:
         self._llm = llm
-        self._langfuse_handler = langfuse_handler
-
-    def _run_config(self) -> RunnableConfig:
-        """Config for LLM invoke so all calls are traced when handler is set."""
-        if not self._langfuse_handler:
-            return {}
-        return {"callbacks": [self._langfuse_handler]}
 
     async def run(
         self,
@@ -65,7 +51,7 @@ class LLMChain:
         Steps:
           1. Build taxonomy string from tags
           2. Format prompt
-          3. Call LLM (with Langfuse callback if configured)
+          3. Call LLM (with per-request Langfuse callback if configured)
           4. Parse JSON
           5. Match slugs → Tag objects
           6. Filter by threshold
@@ -75,41 +61,61 @@ class LLMChain:
         if not tags:
             return []
 
+        # Per-request Langfuse trace + callback — LangChain spans are nested
+        # inside the trace so each request appears as one trace in the UI.
+        trace, handler = None, None
         try:
-            # Build slug → Tag lookup for O(1) matching
+            from tagging.infrastructure.observability import create_langfuse_callback_handler
+            trace, handler = create_langfuse_callback_handler(
+                note_id=context.note_id,
+                shop_id=context.shop_id,
+                ro_id=context.ro_id,
+            )
+        except Exception as e:
+            logger.debug("Langfuse handler setup failed: %s", e)
+
+        run_config = {"callbacks": [handler]} if handler else {}
+
+        try:
             tag_by_slug = {tag.slug: tag for tag in tags}
 
-            # Format prompt
             taxonomy = build_taxonomy_context(tags)
             messages = TAGGING_PROMPT.format_messages(
                 taxonomy=taxonomy,
                 note_text=context.text,
             )
 
-            response = await self._llm.ainvoke(
-                messages,
-                config=self._run_config(),
-            )
+            response = await self._llm.ainvoke(messages, config=run_config)
 
-            # Parse JSON (content may be str or list for multimodal)
             content = response.content
             if not isinstance(content, str):
                 logger.warning("LLM returned non-string content, skipping")
                 return []
+
             raw = self._parse_json(content)
             if raw is None:
                 return []
 
-            # Build TagResults
             results = []
             for item in raw:
                 result = self._build_result(item, tag_by_slug, threshold)
                 if result:
                     results.append(result)
 
+            if trace:
+                try:
+                    trace.end(output={"tags": [r.tag.slug for r in results]})
+                except Exception:
+                    pass
+
             return results
 
         except Exception as e:
+            if trace:
+                try:
+                    trace.end(output={"error": str(e)}, level="ERROR")
+                except Exception:
+                    pass
             logger.warning("LLM chain failed: %s", str(e))
             return []
 
@@ -124,13 +130,10 @@ class LLMChain:
         Returns None if parsing fails.
         """
         try:
-            # Strip markdown code fences if present
             clean = content.strip()
             if clean.startswith("```"):
                 lines = clean.split("\n")
-                # Remove first line (```json or ```) and last line (```)
                 clean = "\n".join(lines[1:-1])
-
             return json.loads(clean)
         except (json.JSONDecodeError, ValueError):
             logger.warning("LLM returned invalid JSON: %s", content[:200])
@@ -159,13 +162,11 @@ class LLMChain:
             confidence = float(item.get("confidence", 0.0))
             reasoning = item.get("reasoning", "")
 
-            # Ignore unknown slugs — LLM hallucinated a tag
             tag = tag_by_slug.get(slug)
             if not tag:
                 logger.debug("LLM returned unknown slug: %s", slug)
                 return None
 
-            # Ignore low confidence results
             if confidence < threshold:
                 return None
 
@@ -179,4 +180,3 @@ class LLMChain:
         except Exception as e:
             logger.warning("Failed to build TagResult: %s", str(e))
             return None
-

@@ -135,11 +135,13 @@ llm-tagger-api/
 │       ├── 032f68276466_create_taxonomy_tables.py
 │       └── 13f9bb00e29d_add_tag_results_table.py
 ├── scripts/
+│   ├── seed_taxonomy.py             # Seeds 8 categories, 30+ tags, 8 rules via API
+│   ├── clickhouse-config.xml        # ClickHouse single-node cluster config (Langfuse v3)
 │   ├── postgres-init.sql            # DB init script (run by Docker)
 │   ├── prometheus.yml               # Prometheus scrape config
 │   └── grafana-datasources.yml      # Grafana datasource config
 ├── Dockerfile                       # Multi-stage: base → dependencies → dev/prod
-├── docker-compose.yml               # Full local stack (9 services)
+├── docker-compose.yml               # Full local stack (14 services)
 ├── pyproject.toml                   # Dependencies, tool config
 ├── uv.lock                          # Locked dependency tree
 ├── alembic.ini                      # Alembic config file
@@ -467,13 +469,16 @@ make env   # copies .env.example → .env
 | `WORKERS` | `4` | Uvicorn worker count in production. Formula: `(2 × CPU cores) + 1` |
 | `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated allowed origins |
 
-### Langfuse (optional)
+### Langfuse (optional — enables LLM tracing)
 
 | Variable | Description |
 |---|---|
-| `LANGFUSE_PUBLIC_KEY` | `pk-lf-...` |
-| `LANGFUSE_SECRET_KEY` | `sk-lf-...` |
+| `LANGFUSE_PUBLIC_KEY` | `pk-lf-...` — from Langfuse project settings |
+| `LANGFUSE_SECRET_KEY` | `sk-lf-...` — from Langfuse project settings |
 | `LANGFUSE_HOST` | `http://localhost:3001` (outside Docker) |
+| `LANGFUSE_NEXTAUTH_SECRET` | Fixed random string — set once, never change |
+| `LANGFUSE_SALT` | Fixed random string — set once, never change |
+| `LANGFUSE_ENCRYPTION_KEY` | 64-char hex — generate with `openssl rand -hex 32` |
 
 ### Worker (ARQ)
 
@@ -490,50 +495,130 @@ make env   # copies .env.example → .env
 
 ### Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker + Docker Compose)
-- [uv](https://github.com/astral-sh/uv) (for local development without Docker)
-- Ollama running locally (if using `LLM_PROVIDER=ollama`) — or an API key for OpenAI/Anthropic
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker + Docker Compose v2)
+- [uv](https://github.com/astral-sh/uv) — Python package manager
+- An LLM: [Ollama](https://ollama.ai) running locally (free, recommended for dev), or an API key for OpenAI / Azure OpenAI / Anthropic
 
-### 1. Clone and configure
+---
+
+### Step 1 — Clone and configure
 
 ```bash
 git clone <repo-url>
 cd llm-tagger-api
 
-make env        # creates .env from .env.example
-# Edit .env — set LLM_PROVIDER and any API keys
+make env          # copies .env.example → .env
 ```
 
-### 2. Start the full stack
+Open `.env` and set at minimum:
+
+```bash
+# Pick one LLM provider:
+LLM_PROVIDER=ollama          # or openai / azure_openai / anthropic
+
+# Ollama (if using local):
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=gemma2:9b
+
+# OpenAI (if using cloud):
+# OPENAI_API_KEY=sk-...
+
+# Langfuse — set these once and never change them.
+# They keep your API keys stable across container restarts.
+LANGFUSE_NEXTAUTH_SECRET=<any-fixed-random-string>
+LANGFUSE_SALT=<any-fixed-random-string>
+LANGFUSE_ENCRYPTION_KEY=<64-char-hex — generate with: openssl rand -hex 32>
+```
+
+> **Ollama setup:** install from https://ollama.ai, then run `ollama pull gemma2:9b`.
+> The app connects to it via `host.docker.internal` from inside Docker — no extra config needed.
+
+---
+
+### Step 2 — Start the full stack
 
 ```bash
 make up
 ```
 
-This starts all 9 services:
+This pulls images and starts all services (~30–60s on first run):
 
-| Service | URL | Description |
+| Service | URL | Notes |
 |---|---|---|
-| **API** | http://localhost:8000 | FastAPI app (hot reload) |
+| **API** | http://localhost:8000 | FastAPI + hot reload |
 | **API Docs** | http://localhost:8000/docs | Swagger UI |
 | **Langfuse** | http://localhost:3001 | LLM trace viewer |
-| **Prometheus** | http://localhost:9090 | Metrics |
-| **Grafana** | http://localhost:3002 | Dashboards (admin/admin) |
+| **MinIO Console** | http://localhost:9011 | Object storage UI (admin / langfuse123) |
+| **Prometheus** | http://localhost:9090 | Metrics scraper |
+| **Grafana** | http://localhost:3002 | Dashboards (admin / admin) |
 
-### 3. Run database migrations
+Internal-only (no exposed port): PostgreSQL, pgBouncer, Redis, ClickHouse, Langfuse Redis, Langfuse worker.
+
+> **Tip:** First startup is slow while ClickHouse and Langfuse run migrations.
+> Run `make logs` to watch progress.
+
+---
+
+### Step 3 — Run database migrations
 
 ```bash
 make migrate
 ```
 
-### 4. Verify the API is running
+This runs Alembic against the app's PostgreSQL database (`tagger`). Only needed on first run and after schema changes.
+
+---
+
+### Step 4 — Seed the taxonomy
+
+```bash
+make seed
+```
+
+Creates the full repair-order taxonomy via the API:
+- **8 categories** (Parts, Customer, Insurance, Production, Sublet, Rental, Communication, Financial)
+- **30+ tags** with names, slugs, colors, and icons
+- **8 detection rules** with keyword conditions
+
+You only need to run this once. The script is idempotent — re-running it skips existing records.
+
+---
+
+### Step 5 — Set up Langfuse API keys
+
+Every LLM call is traced in Langfuse. To enable it:
+
+1. Open http://localhost:3001 and sign up with any email/password
+2. Create a project (e.g. `llm-tagger`)
+3. Go to **Settings → API Keys**, generate a key pair
+4. Copy the keys into `.env`:
+   ```bash
+   LANGFUSE_PUBLIC_KEY=pk-lf-...
+   LANGFUSE_SECRET_KEY=sk-lf-...
+   LANGFUSE_HOST=http://localhost:3001   # outside Docker
+   ```
+5. Restart the app to pick up the new keys:
+   ```bash
+   make restart
+   ```
+6. Verify tracing is on:
+   ```bash
+   docker logs llm-tagger-app 2>&1 | grep Langfuse
+   # Langfuse tracing ON → http://langfuse:3000
+   ```
+
+> **Keep API keys stable:** set `LANGFUSE_NEXTAUTH_SECRET`, `LANGFUSE_SALT`, and `LANGFUSE_ENCRYPTION_KEY`
+> to fixed strings in `.env` before first run and never change them. Never run `docker compose down -v`
+> (removes volumes and wipes the Langfuse database).
+
+---
+
+### Step 6 — Verify and tag a note
 
 ```bash
 curl http://localhost:8000/health
 # {"status": "ok", "version": "0.1.0"}
 ```
-
-### 5. Tag a note
 
 ```bash
 curl -X POST http://localhost:8000/tag \
@@ -546,6 +631,8 @@ curl -X POST http://localhost:8000/tag \
     "event_type": "repair_note"
   }'
 ```
+
+You should get back matched tags with confidence scores and reasoning. Open http://localhost:3001 to see the trace.
 
 ---
 
@@ -573,6 +660,7 @@ make logs-worker     # Follow worker logs only
 
 ```bash
 make migrate                    # Apply all pending migrations (alembic upgrade head)
+make seed                       # Seed taxonomy: 8 categories, 30+ tags, 8 rules (idempotent)
 make migrate-create name=foo    # Generate new migration from ORM model changes
 make migrate-down               # Roll back the last migration
 make db-reset                   # Full reset: drop DB, recreate, migrate (destructive)
@@ -650,13 +738,25 @@ Coverage threshold: **80%** (configured in `pyproject.toml`). Builds fail below 
 
 ### Langfuse — LLM Tracing
 
-Every LLM call is traced in Langfuse when credentials are configured.
+Every LLM call is automatically traced in Langfuse using the SDK v3 `CallbackHandler`. Each `/tag` request creates one parent trace (keyed by `note_id`) with the LLM generation span nested inside, giving full prompt/response visibility.
 
-1. Open http://localhost:3001
-2. Sign up for a local account
-3. Create a project, copy the keys
-4. Set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST=http://langfuse:3000` in `.env`
-5. Restart: `make restart`
+**Setup:** covered in [Step 5](#step-5--set-up-langfuse-api-keys) above.
+
+**Stack (Langfuse v3):** the compose file runs four Langfuse-related services:
+
+| Service | Role |
+|---|---|
+| `langfuse` | Web UI + REST API (port 3001) |
+| `langfuse-worker` | Processes ingested events from Redis queue into ClickHouse |
+| `langfuse-db` | PostgreSQL — stores users, projects, and API keys |
+| `clickhouse` | ClickHouse — stores all traces and spans |
+| `minio` | MinIO — S3-compatible object store used as the event queue |
+
+**Tracing implementation:** the app creates a parent `span` via `Langfuse.start_observation()` with `note_id`/`shop_id` metadata, then passes a `CallbackHandler` with `trace_context` to `llm.ainvoke()`. LangChain spans become children of the parent trace automatically.
+
+**Troubleshooting API keys not persisting:**
+- Never run `docker compose down -v` — this deletes volumes including the Langfuse database.
+- Set `LANGFUSE_NEXTAUTH_SECRET`, `LANGFUSE_SALT`, and `LANGFUSE_ENCRYPTION_KEY` to fixed strings in `.env` before first run and never change them.
 
 ### Prometheus + Grafana — Metrics
 

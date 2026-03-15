@@ -22,6 +22,7 @@ help:
 	@echo ""
 	@echo "  Database:"
 	@echo "    make migrate        Run pending migrations"
+	@echo "    make seed           Seed taxonomy: 8 categories, 30+ tags, 8 rules"
 	@echo "    make migrate-create name=your_migration_name"
 	@echo "    make migrate-down   Rollback last migration"
 	@echo "    make db-reset       Drop and recreate database"
@@ -98,6 +99,9 @@ migrate-create:
 
 migrate-down:
 	uv run alembic downgrade -1
+
+seed:
+	uv run python scripts/seed_taxonomy.py
 
 db-reset:
 	docker compose stop postgres pgbouncer
