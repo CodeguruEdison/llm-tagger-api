@@ -161,3 +161,5 @@ clean:
 	find . -type d -name "coverage-html" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@echo "✓ cleaned"
+dev:
+	uv run uvicorn tagging.api.app:app --reload --port 8001

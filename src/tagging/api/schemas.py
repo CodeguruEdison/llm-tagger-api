@@ -146,3 +146,22 @@ class HealthResponse(BaseModel):
     """Health check response."""
     status: str
     version: str = "0.1.0"
+class CreateCategoryRequest(BaseModel):
+    """Request body for POST /taxonomy/categories."""
+    name: str
+    slug: str
+    description: str
+    is_active: bool = True
+    sort_order: int = 0
+
+
+class CreateTagRequest(BaseModel):
+    """Request body for POST /taxonomy/tags."""
+    category_id: str
+    name: str
+    slug: str
+    description: str
+    color: str
+    icon: str
+    priority: int = 1
+    is_active: bool = True
