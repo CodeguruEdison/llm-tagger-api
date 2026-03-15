@@ -1,4 +1,5 @@
 """Unit tests for NoteContext domain model."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,7 +7,6 @@ from tagging.domain.note_context import NoteContext
 
 
 class TestNoteContext:
-
     def _make_context(self, **overrides) -> NoteContext:
         defaults = {
             "note_id": "note-1",

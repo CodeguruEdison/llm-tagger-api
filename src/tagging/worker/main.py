@@ -11,6 +11,7 @@ Usage:
 Docker (docker-compose):
   command: uv run python -m tagging.worker.main
 """
+
 import logging
 
 from arq.connections import RedisSettings
@@ -73,7 +74,10 @@ def main() -> None:
         job_timeout=ws.job_timeout,
         max_tries=ws.max_tries,
     )
-    names = [getattr(f, "name", getattr(f, "__name__", str(f))) for f in WorkerSettings.functions]
+    names = [
+        getattr(f, "name", getattr(f, "__name__", str(f)))
+        for f in WorkerSettings.functions
+    ]
     logger.info("Starting ARQ worker (functions=%s)", names)
     worker.run()
 

@@ -9,6 +9,7 @@ These are separate from domain models intentionally:
 Each ORM model has a to_domain() method that converts
 a DB row into a clean domain model.
 """
+
 import uuid
 from datetime import datetime
 
@@ -40,20 +41,22 @@ class Base(DeclarativeBase):
     Shared Base class  for ORM Model.
     All tables are inherit from this
     """
+
     pass
+
+
 class TagCategoryModel(Base):
     """
     Maps TagCategory domain model to tag_categories table
     """
+
     __tablename__ = "tag_categories"
     __table_args__ = (
         Index("ix_tag_categories_is_active", "is_active"),
         Index("ix_tag_categories_sort_order", "sort_order"),
     )
     id: Mapped[str] = mapped_column(
-        String(36),
-        primary_key=True,
-        default=lambda:str(uuid.uuid4())
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
@@ -77,6 +80,7 @@ class TagCategoryModel(Base):
         back_populates="category",
         lazy="selectin",
     )
+
     def to_domain(self) -> TagCategory:
         """Convert ORM row to domain model."""
         return TagCategory(
@@ -87,10 +91,13 @@ class TagCategoryModel(Base):
             is_active=self.is_active,
             sort_order=self.sort_order,
         )
+
+
 class TagModel(Base):
     """
     Maps Tag domain model to tags table.
     """
+
     __tablename__ = "tags"
 
     __table_args__ = (
@@ -139,22 +146,25 @@ class TagModel(Base):
     )
 
     def to_domain(self) -> Tag:
-            """Convert ORM row to domain model."""
-            return Tag(
-                id=self.id,
-                category_id=self.category_id,
-                name=self.name,
-                slug=self.slug,
-                description=self.description,
-                color=self.color,
-                icon=self.icon,
-                priority=self.priority,
-                is_active=self.is_active,
-            )
+        """Convert ORM row to domain model."""
+        return Tag(
+            id=self.id,
+            category_id=self.category_id,
+            name=self.name,
+            slug=self.slug,
+            description=self.description,
+            color=self.color,
+            icon=self.icon,
+            priority=self.priority,
+            is_active=self.is_active,
+        )
+
+
 class TagRuleModel(Base):
     """
     Maps TagRule domain model to tag_rules table.
     """
+
     __tablename__ = "tag_rules"
 
     __table_args__ = (
@@ -198,6 +208,7 @@ class TagRuleModel(Base):
         order_by="TagRuleConditionModel.created_at",
         cascade="all, delete-orphan",
     )
+
     def to_domain(self) -> TagRule:
         """Convert ORM row to domain model including conditions."""
         return TagRule(
@@ -208,15 +219,16 @@ class TagRuleModel(Base):
             is_enabled=self.is_enabled,
             conditions=[c.to_domain() for c in self.conditions],
         )
+
+
 class TagRuleConditionModel(Base):
     """
     Maps TagRuleCondition domain model to tag_rule_conditions table.
     """
+
     __tablename__ = "tag_rule_conditions"
 
-    __table_args__ = (
-        Index("ix_tag_rule_conditions_rule_id", "rule_id"),
-    )
+    __table_args__ = (Index("ix_tag_rule_conditions_rule_id", "rule_id"),)
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
@@ -240,6 +252,7 @@ class TagRuleConditionModel(Base):
         "TagRuleModel",
         back_populates="conditions",
     )
+
     def to_domain(self) -> TagRuleCondition:
         """Convert ORM row to domain model."""
         return TagRuleCondition(
@@ -252,6 +265,7 @@ class TagRuleConditionModel(Base):
 
 class TagResultModel(Base):
     """Persists tag results from the pipeline."""
+
     __tablename__ = "tag_results"
 
     __table_args__ = (

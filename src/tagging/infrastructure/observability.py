@@ -18,6 +18,7 @@ Usage:
 
 Note: requires Langfuse SDK v3 + Langfuse server v3.
 """
+
 import logging
 from functools import lru_cache
 from typing import Any

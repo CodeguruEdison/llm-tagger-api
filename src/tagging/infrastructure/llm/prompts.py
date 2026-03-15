@@ -18,6 +18,8 @@ from langchain_core.prompts import ChatPromptTemplate
 
 # Path to templates directory
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
 def _load_template(filename: str) -> str:
     """
     Load a prompt template from a .md file.
@@ -30,10 +32,10 @@ def _load_template(filename: str) -> str:
     template_path = TEMPLATES_DIR / filename
     if not template_path.exists():
         raise FileNotFoundError(
-            f"Prompt template not found: {template_path}. "
-            f"Expected at: {TEMPLATES_DIR}"
+            f"Prompt template not found: {template_path}. Expected at: {TEMPLATES_DIR}"
         )
     return template_path.read_text(encoding="utf-8").strip()
+
 
 def build_taxonomy_context(tags: list) -> str:
     """
@@ -54,6 +56,7 @@ def build_taxonomy_context(tags: list) -> str:
     lines = [f"  - {tag.slug}: {tag.description}" for tag in tags]
     return "\n".join(lines)
 
+
 def build_tagging_prompt() -> ChatPromptTemplate:
     """
     Build the complete tagging prompt template from .md files.
@@ -64,9 +67,13 @@ def build_tagging_prompt() -> ChatPromptTemplate:
     system_template = _load_template("system.md")
     user_template = _load_template("user.md")
 
-    return ChatPromptTemplate.from_messages([
-        ("system", system_template),
-        ("human", user_template),
-    ])
- # Build once at module load — templates are static files
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", system_template),
+            ("human", user_template),
+        ]
+    )
+
+
+# Build once at module load — templates are static files
 TAGGING_PROMPT = build_tagging_prompt()

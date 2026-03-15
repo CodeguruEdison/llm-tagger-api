@@ -1,4 +1,3 @@
-
 from tagging.application.rules_engine import RulesEngine
 from tagging.domain.enums.condition_operator import ConditionOperator
 from tagging.domain.enums.condition_type import ConditionType
@@ -10,7 +9,6 @@ from tagging.domain.tag_rule_condition import TagRuleCondition
 
 
 class TestRulesEngine:
-
     def _make_tag(self, slug="parts-delay") -> Tag:
         return Tag(
             id="tag-1",
@@ -256,9 +254,7 @@ class TestRulesEngine:
         assert len(results) == 1
 
         # Second condition fails
-        context2 = self._make_context(
-            "waiting on parts — UPDATE: parts arrived"
-        )
+        context2 = self._make_context("waiting on parts — UPDATE: parts arrived")
         results2 = engine.evaluate(context2, [tag], [rule])
         assert len(results2) == 0
 
@@ -315,9 +311,7 @@ class TestRulesEngine:
             ],
         )
 
-        context = self._make_context(
-            "waiting on parts, customer called twice"
-        )
+        context = self._make_context("waiting on parts, customer called twice")
         results = engine.evaluate(context, [tag1, tag2], [rule1, rule2])
         assert len(results) == 2
         slugs = [r.tag.slug for r in results]
@@ -333,7 +327,7 @@ class TestRulesEngine:
             tag_id="tag-1",
             name="Disabled Rule",
             priority=100,
-            is_enabled=False,       # disabled
+            is_enabled=False,  # disabled
             conditions=[
                 TagRuleCondition(
                     id="cond-1",

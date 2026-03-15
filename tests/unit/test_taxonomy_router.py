@@ -1,4 +1,5 @@
 """Unit tests for taxonomy router."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -44,7 +45,6 @@ def make_client(categories=None, tags=None):
 
 
 class TestTaxonomyRouter:
-
     def test_get_taxonomy(self):
         """GET /taxonomy returns categories and tags."""
         client = make_client(
@@ -88,22 +88,26 @@ class TestTaxonomyRouter:
 
     def test_create_category(self):
         """POST /taxonomy/categories creates and returns category."""
-        app =create_app()
+        app = create_app()
         mock_repo = MagicMock()
-        mock_repo.create_category = AsyncMock(side_effect=lambda c:c)
-        app.dependency_overrides[get_repository] = lambda:mock_repo
+        mock_repo.create_category = AsyncMock(side_effect=lambda c: c)
+        app.dependency_overrides[get_repository] = lambda: mock_repo
         client = TestClient(app)
-        response = client.post("/taxonomy/categories", json={
-            "name": "Parts",
-            "slug": "parts",
-            "description": "Parts related issues",
-            "is_active": True,
-            "sort_order": 1,
-        })
+        response = client.post(
+            "/taxonomy/categories",
+            json={
+                "name": "Parts",
+                "slug": "parts",
+                "description": "Parts related issues",
+                "is_active": True,
+                "sort_order": 1,
+            },
+        )
         assert response.status_code == 201
         data = response.json()
         assert data["name"] == "Parts"
         assert data["slug"] == "parts"
+
     def test_create_tag(self):
         """POST /taxonomy/tags creates and returns tag."""
         app = create_app()
@@ -112,16 +116,19 @@ class TestTaxonomyRouter:
         app.dependency_overrides[get_repository] = lambda: mock_repo
         client = TestClient(app)
 
-        response = client.post("/taxonomy/tags", json={
-            "category_id": "cat-1",
-            "name": "Parts Delay",
-            "slug": "parts-delay",
-            "description": "Waiting on parts from supplier",
-            "color": "#FF6B6B",
-            "icon": "clock",
-            "priority": 1,
-            "is_active": True,
-        })
+        response = client.post(
+            "/taxonomy/tags",
+            json={
+                "category_id": "cat-1",
+                "name": "Parts Delay",
+                "slug": "parts-delay",
+                "description": "Waiting on parts from supplier",
+                "color": "#FF6B6B",
+                "icon": "clock",
+                "priority": 1,
+                "is_active": True,
+            },
+        )
         assert response.status_code == 201
         data = response.json()
         assert data["name"] == "Parts Delay"

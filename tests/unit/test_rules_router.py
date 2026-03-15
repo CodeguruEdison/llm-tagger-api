@@ -1,4 +1,5 @@
 """Unit tests for rules router."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -42,7 +43,6 @@ def make_client(rules=None, rule=None):
 
 
 class TestRulesRouter:
-
     def test_get_rules(self):
         """GET /rules returns list of rules."""
         client, _ = make_client(rules=[make_rule()])
@@ -51,9 +51,7 @@ class TestRulesRouter:
         data = response.json()
         assert len(data) == 1
         assert data[0]["name"] == "Parts Delay Detection"
-        assert data[0]["conditions"][0]["values"] == [
-            "backordered", "waiting on parts"
-        ]
+        assert data[0]["conditions"][0]["values"] == ["backordered", "waiting on parts"]
 
     def test_get_rule_by_id(self):
         """GET /rules/{id} returns single rule."""
@@ -71,47 +69,59 @@ class TestRulesRouter:
     def test_create_rule(self):
         """POST /rules creates and returns new rule."""
         client, _ = make_client()
-        response = client.post("/rules", json={
-            "tag_id": "tag-1",
-            "name": "New Rule",
-            "priority": 100,
-            "is_enabled": True,
-            "conditions": [
-                {
-                    "condition_type": "KEYWORD_ANY",
-                    "operator": "AND",
-                    "values": ["backordered"],
-                }
-            ],
-        })
+        response = client.post(
+            "/rules",
+            json={
+                "tag_id": "tag-1",
+                "name": "New Rule",
+                "priority": 100,
+                "is_enabled": True,
+                "conditions": [
+                    {
+                        "condition_type": "KEYWORD_ANY",
+                        "operator": "AND",
+                        "values": ["backordered"],
+                    }
+                ],
+            },
+        )
         assert response.status_code == 201
         assert response.json()["name"] == "New Rule"
 
     def test_create_rule_empty_conditions_returns_422(self):
         """POST /rules with empty conditions returns 422."""
         client, _ = make_client()
-        response = client.post("/rules", json={
-            "tag_id": "tag-1",
-            "name": "Bad Rule",
-            "conditions": [],
-        })
+        response = client.post(
+            "/rules",
+            json={
+                "tag_id": "tag-1",
+                "name": "Bad Rule",
+                "conditions": [],
+            },
+        )
         assert response.status_code == 422
 
     def test_update_rule(self):
         """PUT /rules/{id} updates and returns rule."""
         client, _ = make_client(rule=make_rule())
-        response = client.put("/rules/rule-1", json={
-            "name": "Updated Rule",
-            "is_enabled": False,
-        })
+        response = client.put(
+            "/rules/rule-1",
+            json={
+                "name": "Updated Rule",
+                "is_enabled": False,
+            },
+        )
         assert response.status_code == 200
 
     def test_update_rule_not_found(self):
         """PUT /rules/{id} returns 404 when not found."""
         client, _ = make_client(rule=None)
-        response = client.put("/rules/nonexistent", json={
-            "name": "Updated",
-        })
+        response = client.put(
+            "/rules/nonexistent",
+            json={
+                "name": "Updated",
+            },
+        )
         assert response.status_code == 404
 
     def test_delete_rule(self):

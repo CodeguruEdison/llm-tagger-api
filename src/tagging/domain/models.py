@@ -4,6 +4,7 @@ Domain models — single entry point.
 Import from here everywhere in the codebase:
   from tagging.domain.models import TagCategory, Tag, TagRule, NoteContext, TagResult
 """
+
 from tagging.domain.note_context import NoteContext
 from tagging.domain.tag import Tag
 from tagging.domain.tag_category import TagCategory

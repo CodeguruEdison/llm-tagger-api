@@ -1,4 +1,5 @@
 """ConditionOperator enum — how conditions combine."""
+
 from enum import StrEnum
 
 

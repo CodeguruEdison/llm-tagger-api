@@ -7,6 +7,7 @@ POST   /rules              ← create rule
 PUT    /rules/{rule_id}    ← update rule
 DELETE /rules/{rule_id}    ← delete rule
 """
+
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -116,8 +117,12 @@ async def update_rule(
         id=existing.id,
         tag_id=existing.tag_id,
         name=request.name if request.name is not None else existing.name,
-        priority=request.priority if request.priority is not None else existing.priority,
-        is_enabled=request.is_enabled if request.is_enabled is not None else existing.is_enabled,
+        priority=request.priority
+        if request.priority is not None
+        else existing.priority,
+        is_enabled=request.is_enabled
+        if request.is_enabled is not None
+        else existing.is_enabled,
         conditions=[
             TagRuleCondition(
                 id=str(uuid.uuid4()),
@@ -126,7 +131,9 @@ async def update_rule(
                 values=c.values,
             )
             for c in request.conditions
-        ] if request.conditions is not None else existing.conditions,
+        ]
+        if request.conditions is not None
+        else existing.conditions,
     )
 
     saved = await repository.update_rule(updated)

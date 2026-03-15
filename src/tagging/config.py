@@ -9,6 +9,7 @@ Usage:
     settings = get_settings()
     print(settings.llm_provider)
 """
+
 from functools import lru_cache
 
 from pydantic import model_validator
@@ -28,28 +29,31 @@ class Settings(BaseSettings):
         LLM_PROVIDER=ollama  →  settings.llm_provider == LLMProvider.OLLAMA
         TAGGING_MODE=hybrid  →  settings.tagging_mode == TaggingMode.HYBRID
     """
+
     model_config = SettingsConfigDict(
-        env_file=".env",           # load from .env file if present
+        env_file=".env",  # load from .env file if present
         env_file_encoding="utf-8",
-        case_sensitive=False,      # LLM_PROVIDER == llm_provider
-        extra="ignore",            # ignore unknown env vars
+        case_sensitive=False,  # LLM_PROVIDER == llm_provider
+        extra="ignore",  # ignore unknown env vars
     )
 
     # ── Database ──────────────────────────────────────────
     database_url: str
-    direct_database_url: str | None = None  # use when pgBouncer causes auth issues (e.g. Docker)
+    direct_database_url: str | None = (
+        None  # use when pgBouncer causes auth issues (e.g. Docker)
+    )
     database_pool_size: int = 20
     database_max_overflow: int = 10
 
     # ── Redis ─────────────────────────────────────────────
     redis_url: str
     arq_redis_url: str
-    redis_taxonomy_ttl: int = 300   # 5 minutes
+    redis_taxonomy_ttl: int = 300  # 5 minutes
 
     # ── Tagging Pipeline ──────────────────────────────────
     tagging_mode: TaggingMode = TaggingMode.HYBRID
-    llm_confidence_threshold: float = 0.7   # ignore LLM results below this
-    rules_confidence: float = 1.0           # rules are always deterministic
+    llm_confidence_threshold: float = 0.7  # ignore LLM results below this
+    rules_confidence: float = 1.0  # rules are always deterministic
 
     # ── LLM Provider ──────────────────────────────────────
     llm_provider: LLMProvider
@@ -108,9 +112,7 @@ class Settings(BaseSettings):
 
         elif self.llm_provider == LLMProvider.OPENAI:
             if not self.openai_api_key:
-                raise ValueError(
-                    "OPENAI_API_KEY is required when LLM_PROVIDER=openai."
-                )
+                raise ValueError("OPENAI_API_KEY is required when LLM_PROVIDER=openai.")
 
         elif self.llm_provider == LLMProvider.AZURE_OPENAI:
             if not self.azure_openai_endpoint or not self.azure_openai_api_key:

@@ -15,6 +15,7 @@ Everything else is injected — easy to test, easy to swap.
 Langfuse: pass langfuse_handler so the full pipeline run is traced as one trace
 in Langfuse (with nested LLM spans from the chain).
 """
+
 import asyncio
 import logging
 from typing import Any
@@ -57,9 +58,7 @@ class Orchestrator:
         self._llm_chain = llm_chain
         self._langfuse_client = langfuse_client
 
-    async def tag_note(
-        self, context: NoteContext
-    ) -> list[TagResult]:
+    async def tag_note(self, context: NoteContext) -> list[TagResult]:
         """
         Run the full tagging pipeline for a single note.
 
@@ -95,6 +94,7 @@ class Orchestrator:
 
             # Flush Langfuse so traces appear immediately in the dashboard
             from tagging.infrastructure.observability import flush_langfuse
+
             await asyncio.to_thread(flush_langfuse, self._langfuse_client)
 
             # Log any LLM errors — pipeline still returns rules results

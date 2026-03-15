@@ -25,6 +25,7 @@ Nodes = pure logic, no routing decisions.
 Edges = all routing decisions live here.
 State = data flowing through every node.
 """
+
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -41,6 +42,7 @@ from tagging.domain.tag_rule import TagRule
 # Pipeline State
 # ─────────────────────────────────────────────
 
+
 class PipelineState(TypedDict):
     """
     State passed between all nodes in the graph.
@@ -48,6 +50,7 @@ class PipelineState(TypedDict):
     Every node reads what it needs and writes its output back.
     LangGraph merges the returned dict into the current state.
     """
+
     context: NoteContext
     tags: list[Tag]
     rules: list[TagRule]
@@ -56,13 +59,14 @@ class PipelineState(TypedDict):
     final_results: list[TagResult]
     tagging_mode: TaggingMode
     llm_confidence_threshold: float
-    llm_chain: Any | None        # injected by orchestrator, None in RULES_ONLY
+    llm_chain: Any | None  # injected by orchestrator, None in RULES_ONLY
     error: str | None
 
 
 # ─────────────────────────────────────────────
 # Nodes — pure logic, no routing
 # ─────────────────────────────────────────────
+
 
 def run_rules_node(state: PipelineState) -> dict:
     """
@@ -153,6 +157,7 @@ def merge_results_node(state: PipelineState) -> dict:
 # Conditional Edges — all routing decisions
 # ─────────────────────────────────────────────
 
+
 def should_run_rules(state: PipelineState) -> str:
     """
     Decides whether to run the rules engine.
@@ -180,6 +185,7 @@ def should_run_llm(state: PipelineState) -> str:
 # ─────────────────────────────────────────────
 # Graph Assembly
 # ─────────────────────────────────────────────
+
 
 def build_pipeline() -> Any:
     """

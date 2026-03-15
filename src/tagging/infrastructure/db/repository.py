@@ -4,6 +4,7 @@ TagRepository — real PostgreSQL implementation of ITagRepository.
 Uses SQLAlchemy async session for all DB operations.
 Converts ORM models to domain models via to_domain().
 """
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,9 +39,7 @@ class TagRepository(ITagRepository):
         )
         return [row.to_domain() for row in result.scalars().all()]
 
-    async def get_tags_by_category(
-        self, category_id: str
-    ) -> list[Tag]:
+    async def get_tags_by_category(self, category_id: str) -> list[Tag]:
         result = await self._session.execute(
             select(TagModel)
             .where(
@@ -53,15 +52,11 @@ class TagRepository(ITagRepository):
 
     async def get_all_active_tags(self) -> list[Tag]:
         result = await self._session.execute(
-            select(TagModel)
-            .where(TagModel.is_active)
-            .order_by(TagModel.priority)
+            select(TagModel).where(TagModel.is_active).order_by(TagModel.priority)
         )
         return [row.to_domain() for row in result.scalars().all()]
 
-    async def get_rules_for_tag(
-        self, tag_id: str
-    ) -> list[TagRule]:
+    async def get_rules_for_tag(self, tag_id: str) -> list[TagRule]:
         result = await self._session.execute(
             select(TagRuleModel)
             .where(
@@ -90,6 +85,7 @@ class TagRepository(ITagRepository):
         We store the key fields needed for the UI and reporting.
         """
         from tagging.infrastructure.db.models import TagResultModel
+
         orm = TagResultModel(
             note_id=context.note_id,
             ro_id=context.ro_id,
@@ -102,13 +98,11 @@ class TagRepository(ITagRepository):
         self._session.add(orm)
         await self._session.flush()
 
-    async def get_results_for_note(
-        self, note_id: str
-    ) -> list[TagResult]:
+    async def get_results_for_note(self, note_id: str) -> list[TagResult]:
         from tagging.infrastructure.db.models import TagResultModel
+
         result = await self._session.execute(
-            select(TagResultModel)
-            .where(TagResultModel.note_id == note_id)
+            select(TagResultModel).where(TagResultModel.note_id == note_id)
         )
         rows = result.scalars().all()
         results = []
@@ -118,9 +112,7 @@ class TagRepository(ITagRepository):
                 results.append(row.to_domain(tag_result.to_domain()))
         return results
 
-    async def create_category(
-        self, category: TagCategory
-    ) -> TagCategory:
+    async def create_category(self, category: TagCategory) -> TagCategory:
         """Create a new category. Used in tests and API."""
         orm = TagCategoryModel(
             id=category.id,
@@ -175,17 +167,15 @@ class TagRepository(ITagRepository):
 
         await self._session.flush()
         return rule
+
     async def get_all_rules(self) -> list[TagRule]:
         """Get all rules regardless of enabled status."""
         result = await self._session.execute(
-            select(TagRuleModel)
-            .order_by(TagRuleModel.priority.desc())
+            select(TagRuleModel).order_by(TagRuleModel.priority.desc())
         )
         return [row.to_domain() for row in result.scalars().all()]
 
-    async def get_rule_by_id(
-        self, rule_id: str
-    ) -> TagRule | None:
+    async def get_rule_by_id(self, rule_id: str) -> TagRule | None:
         """Get a single rule by ID. Returns None if not found."""
         result = await self._session.get(TagRuleModel, rule_id)
         if not result:

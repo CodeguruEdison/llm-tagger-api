@@ -1,4 +1,5 @@
 """Unit tests for TagCategory domain model."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,7 +7,6 @@ from tagging.domain.tag_category import TagCategory
 
 
 class TestTagCategory:
-
     def test_can_create_category(self):
         category = TagCategory(
             id="uuid-1",

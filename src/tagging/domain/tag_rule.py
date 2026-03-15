@@ -3,6 +3,7 @@ TagRule domain model.
 Defines when a tag should be applied.
 Evaluated by rules engine in priority order.
 """
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from tagging.domain.tag_rule_condition import TagRuleCondition

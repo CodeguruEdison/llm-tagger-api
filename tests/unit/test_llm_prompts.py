@@ -11,7 +11,6 @@ from tagging.infrastructure.llm.prompts import (
 
 
 class TestLoadTemplate:
-
     def test_loads_system_template(self):
         """System template loads from system.md."""
         content = _load_template("system.md")
@@ -31,7 +30,6 @@ class TestLoadTemplate:
 
 
 class TestBuildTaxonomyContext:
-
     def _make_tag(self, slug: str, description: str) -> Tag:
         return Tag(
             id=f"tag-{slug}",
@@ -79,7 +77,6 @@ class TestBuildTaxonomyContext:
 
 
 class TestTaggingPrompt:
-
     def test_prompt_has_required_variables(self):
         """Prompt must have taxonomy and note_text variables."""
         variables = TAGGING_PROMPT.input_variables

@@ -13,6 +13,7 @@ Langfuse: a per-request CallbackHandler is created inside run() so each LLM
 call is automatically traced as a Langfuse session keyed to the note_id.
 No manual trace/generation code needed — the v3 SDK handles it via OTEL.
 """
+
 import json
 import logging
 
@@ -68,6 +69,7 @@ class LLMChain:
             from tagging.infrastructure.observability import (
                 create_langfuse_callback_handler,
             )
+
             trace, handler = create_langfuse_callback_handler(
                 note_id=context.note_id,
                 shop_id=context.shop_id,
@@ -123,13 +125,13 @@ class LLMChain:
 
     def _parse_json(self, content: str) -> list | None:
         """
-        Parse JSON from LLM response.
+                Parse JSON from LLM response.
 
-        LLMs sometimes wrap JSON in markdown code blocks:
-```json\n[...]\n```
-        We strip those before parsing.
+                LLMs sometimes wrap JSON in markdown code blocks:
+        ```json\n[...]\n```
+                We strip those before parsing.
 
-        Returns None if parsing fails.
+                Returns None if parsing fails.
         """
         try:
             clean = content.strip()

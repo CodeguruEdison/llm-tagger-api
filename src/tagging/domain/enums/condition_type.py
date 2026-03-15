@@ -1,4 +1,5 @@
 """ConditionType enum — how a rule condition matches text."""
+
 from enum import StrEnum
 
 

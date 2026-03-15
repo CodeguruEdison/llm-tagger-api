@@ -8,6 +8,7 @@ Every layer of the system speaks TagResult out:
   - API response → TagResult
   - WebSocket push → TagResult
 """
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from tagging.domain.enums import TagSource
@@ -26,6 +27,7 @@ class TagResult(BaseModel):
 
     Immutable — result is final once created.
     """
+
     model_config = ConfigDict(frozen=True)
 
     tag: Tag
@@ -42,9 +44,7 @@ class TagResult(BaseModel):
         LLM returns 0.0-1.0 (probabilistic)
         """
         if v < 0.0 or v > 1.0:
-            raise ValueError(
-                f"confidence must be between 0.0 and 1.0. Got: {v}"
-            )
+            raise ValueError(f"confidence must be between 0.0 and 1.0. Got: {v}")
         return v
 
     @field_validator("reasoning")

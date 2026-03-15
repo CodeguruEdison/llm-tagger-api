@@ -1,4 +1,5 @@
 """Unit tests for Tag domain model."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,7 +7,6 @@ from tagging.domain.tag import Tag
 
 
 class TestTag:
-
     def _make_tag(self, **overrides) -> Tag:
         """Helper — avoids repeating valid tag data in every test."""
         defaults = {

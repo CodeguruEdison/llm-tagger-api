@@ -7,6 +7,7 @@ No DB, no real LLM calls.
 
 Run: uv run pytest tests/unit/test_orchestrator.py -v
 """
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -75,7 +76,6 @@ def make_mock_repo(tags=None, rules=None) -> ITagRepository:
 
 
 class TestOrchestrator:
-
     @pytest.mark.asyncio
     async def test_rules_only_tags_note(self):
         """Orchestrator applies rules and returns results."""

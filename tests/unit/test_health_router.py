@@ -1,4 +1,5 @@
 """Unit tests for health check endpoint."""
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,7 +13,6 @@ def client():
 
 
 class TestHealthRouter:
-
     def test_health_returns_ok(self, client):
         """Health endpoint returns 200 with ok status."""
         response = client.get("/health")

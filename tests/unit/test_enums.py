@@ -1,4 +1,3 @@
-
 import pytest
 
 from tagging.domain.enums import (
@@ -10,16 +9,15 @@ from tagging.domain.enums import (
 
 
 class TestConditionType:
-
     def test_all_condition_types_exist(self):
         """
         All condition types the rules engine supports.
         Each type = different matching strategy.
         """
-        assert ConditionType.KEYWORD_ANY   # match ANY keyword in list
+        assert ConditionType.KEYWORD_ANY  # match ANY keyword in list
         assert ConditionType.KEYWORD_NONE  # match if NONE of keywords present
-        assert ConditionType.PHRASE        # exact phrase match
-        assert ConditionType.REGEX         # regular expression match
+        assert ConditionType.PHRASE  # exact phrase match
+        assert ConditionType.REGEX  # regular expression match
 
     def test_values_are_strings(self):
         """String values for DB storage and API responses."""
@@ -40,7 +38,6 @@ class TestConditionType:
 
 
 class TestConditionOperator:
-
     def test_all_operators_exist(self):
         """
         AND: all conditions must pass
@@ -55,14 +52,13 @@ class TestConditionOperator:
 
 
 class TestTaggingMode:
-
     def test_all_modes_exist(self):
         """
         Three modes control the tagging pipeline.
         """
         assert TaggingMode.RULES_ONLY  # fast, free, no LLM
-        assert TaggingMode.LLM_ONLY    # smart, costs money
-        assert TaggingMode.HYBRID      # best of both (default)
+        assert TaggingMode.LLM_ONLY  # smart, costs money
+        assert TaggingMode.HYBRID  # best of both (default)
 
     def test_values_are_strings(self):
         assert TaggingMode.RULES_ONLY.value == "rules_only"
@@ -96,9 +92,7 @@ class TestTaggingMode:
             TaggingMode("invalid_mode")
 
 
-
 class TestTagSource:
-
     def test_all_sources_exist(self):
         assert TagSource.RULES
         assert TagSource.LLM

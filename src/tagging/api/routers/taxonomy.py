@@ -5,6 +5,7 @@ GET /taxonomy              ← all categories + tags
 GET /taxonomy/categories   ← list categories
 GET /taxonomy/tags         ← list all tags
 """
+
 import uuid
 
 from fastapi import APIRouter, Depends, status
@@ -102,6 +103,8 @@ async def get_tags(
         )
         for t in tags
     ]
+
+
 @router.post(
     "/categories",
     response_model=CategoryResponse,
@@ -129,6 +132,8 @@ async def create_category(
         is_active=created.is_active,
         sort_order=created.sort_order,
     )
+
+
 @router.post(
     "/tags",
     response_model=TagResponse,

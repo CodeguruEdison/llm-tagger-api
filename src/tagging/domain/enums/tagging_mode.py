@@ -1,4 +1,5 @@
 """TaggingMode enum — controls which pipeline stages run."""
+
 from enum import StrEnum
 
 

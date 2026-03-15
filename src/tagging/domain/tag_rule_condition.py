@@ -2,6 +2,7 @@
 TagRuleCondition domain model.
 A single condition within a tagging rule.
 """
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from tagging.domain.enums import ConditionOperator, ConditionType

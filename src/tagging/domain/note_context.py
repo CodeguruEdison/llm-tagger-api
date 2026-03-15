@@ -7,6 +7,7 @@ Every layer of the system speaks NoteContext in:
   - ARQ job queue → NoteContext
   - Tests → NoteContext
 """
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
@@ -17,6 +18,7 @@ class NoteContext(BaseModel):
     Immutable — created once, passed through pipeline unchanged.
     Every layer reads from it, nothing modifies it.
     """
+
     model_config = ConfigDict(frozen=True)
 
     note_id: str

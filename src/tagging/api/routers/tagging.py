@@ -3,6 +3,7 @@ Tagging router.
 
 POST /tag — submit a note, get back tags
 """
+
 from fastapi import APIRouter, Depends
 
 from tagging.api.dependencies import get_orchestrator

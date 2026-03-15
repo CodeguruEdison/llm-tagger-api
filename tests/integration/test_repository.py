@@ -7,6 +7,7 @@ No mocking — this verifies the actual SQL queries work.
 Run: uv run pytest tests/integration/ -v --no-cov -m integration
 Expected: GREEN (requires Docker)
 """
+
 import uuid
 
 import pytest
@@ -30,6 +31,7 @@ from tagging.infrastructure.db.repository import TagRepository
 # Fixtures — shared test infrastructure
 # ─────────────────────────────────────────────
 
+
 @pytest.fixture(scope="session")
 def postgres_container():
     """
@@ -47,7 +49,6 @@ async def db_engine(postgres_container):
     # testcontainers returns psycopg2 URL — convert to asyncpg
     url = postgres_container.get_connection_url()
     url = url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
-
 
     engine = create_async_engine(url, echo=False)
 
@@ -88,6 +89,7 @@ async def repository(db_session):
 # Helper fixtures — test data
 # ─────────────────────────────────────────────
 
+
 @pytest_asyncio.fixture
 async def sample_category(repository) -> TagCategory:
     return await repository.create_category(
@@ -100,7 +102,6 @@ async def sample_category(repository) -> TagCategory:
             sort_order=1,
         )
     )
-
 
 
 @pytest_asyncio.fixture
@@ -123,6 +124,7 @@ async def sample_tag(repository, sample_category) -> Tag:
 # ─────────────────────────────────────────────
 # Tests
 # ─────────────────────────────────────────────
+
 
 class TestTagRepository:
     pytestmark = [
@@ -149,25 +151,19 @@ class TestTagRepository:
         slugs = [c.slug for c in categories]
         assert f"customer-{uid}" in slugs
 
-    async def test_get_tags_by_category(
-        self, repository, sample_category, sample_tag
-    ):
+    async def test_get_tags_by_category(self, repository, sample_category, sample_tag):
         """Returns only tags belonging to the given category."""
         tags = await repository.get_tags_by_category(sample_category.id)
         assert len(tags) >= 1
         assert any(t.slug == sample_tag.slug for t in tags)
 
-    async def test_get_all_active_tags(
-        self, repository, sample_category, sample_tag
-    ):
+    async def test_get_all_active_tags(self, repository, sample_category, sample_tag):
         """Returns all active tags."""
         tags = await repository.get_all_active_tags()
         assert len(tags) >= 1
         assert all(t.is_active for t in tags)
 
-    async def test_create_and_get_rule(
-        self, repository, sample_tag
-    ):
+    async def test_create_and_get_rule(self, repository, sample_tag):
         """Can create a rule and retrieve it by tag."""
         uid = uuid.uuid4().hex[:8]
         rule = await repository.create_rule(
@@ -195,9 +191,7 @@ class TestTagRepository:
             "waiting on parts",
         ]
 
-    async def test_save_and_retrieve_tag_result(
-        self, repository, sample_tag
-    ):
+    async def test_save_and_retrieve_tag_result(self, repository, sample_tag):
         """Can save a tag result and retrieve it by note_id."""
         uid = uuid.uuid4().hex[:8]
         context = NoteContext(
@@ -221,6 +215,7 @@ class TestTagRepository:
         assert retrieved[0].tag.slug == sample_tag.slug
         assert retrieved[0].confidence == 1.0
         assert retrieved[0].source == TagSource.RULES
+
     async def test_get_all_rules(self, repository, sample_tag):
         """Can retrieve all rules."""
         await repository.create_rule(

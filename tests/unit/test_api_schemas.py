@@ -1,4 +1,5 @@
 """Unit tests for API schemas."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -10,7 +11,6 @@ from tagging.api.schemas import (
 
 
 class TestTagNoteRequest:
-
     def test_valid_request(self):
         """Valid request parses correctly."""
         req = TagNoteRequest(
@@ -44,7 +44,6 @@ class TestTagNoteRequest:
 
 
 class TestCreateRuleRequest:
-
     def test_valid_request(self):
         """Valid rule request parses correctly."""
         req = CreateRuleRequest(

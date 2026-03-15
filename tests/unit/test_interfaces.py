@@ -9,6 +9,7 @@ We test that:
 Run: uv run pytest tests/unit/test_interfaces.py -v --no-cov
 Expected: GREEN (interface + mock are pure Python, no DB needed)
 """
+
 import pytest
 
 from tagging.application.interfaces import ITagRepository
@@ -50,19 +51,14 @@ class MockTagRepository(ITagRepository):
     async def get_all_active_rules(self) -> list[TagRule]:
         return [r for r in self._rules if r.is_enabled]
 
-    async def save_tag_result(
-        self, context: NoteContext, result: TagResult
-    ) -> None:
+    async def save_tag_result(self, context: NoteContext, result: TagResult) -> None:
         self._results.append((context, result))
 
-    async def get_results_for_note(
-        self, note_id: str
-    ) -> list[TagResult]:
+    async def get_results_for_note(self, note_id: str) -> list[TagResult]:
         return [
-            result
-            for context, result in self._results
-            if context.note_id == note_id
+            result for context, result in self._results if context.note_id == note_id
         ]
+
     async def get_all_rules(self) -> list[TagRule]:
         return self._rules
 
@@ -90,7 +86,6 @@ class MockTagRepository(ITagRepository):
 
 
 class TestITagRepository:
-
     def test_cannot_instantiate_interface_directly(self):
         """
         Interface is abstract — cannot be used directly.
@@ -210,7 +205,7 @@ class TestITagRepository:
                 tag_id="tag-1",
                 name="Disabled Rule",
                 priority=90,
-                is_enabled=False,   # disabled
+                is_enabled=False,  # disabled
                 conditions=[
                     TagRuleCondition(
                         id="cond-2",

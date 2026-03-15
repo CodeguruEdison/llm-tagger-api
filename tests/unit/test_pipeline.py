@@ -11,6 +11,7 @@ No DB, no real LLM — pure logic testing.
 
 Run: uv run pytest tests/unit/test_pipeline.py -v
 """
+
 import pytest
 
 from tagging.application.pipeline import (
@@ -34,6 +35,7 @@ from tagging.domain.tag_rule_condition import TagRuleCondition
 # ─────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────
+
 
 def make_tag(id="tag-1", slug="parts-delay") -> Tag:
     return Tag(
@@ -93,8 +95,8 @@ def base_state(**overrides) -> PipelineState:
 # Conditional Edge Tests
 # ─────────────────────────────────────────────
 
-class TestShouldRunRules:
 
+class TestShouldRunRules:
     def test_llm_only_skips_rules(self):
         """LLM_ONLY routes directly to run_llm."""
         state = base_state(tagging_mode=TaggingMode.LLM_ONLY)
@@ -112,7 +114,6 @@ class TestShouldRunRules:
 
 
 class TestShouldRunLLM:
-
     def test_rules_only_skips_llm(self):
         """RULES_ONLY routes directly to merge."""
         state = base_state(tagging_mode=TaggingMode.RULES_ONLY)
@@ -133,8 +134,8 @@ class TestShouldRunLLM:
 # Node Tests
 # ─────────────────────────────────────────────
 
-class TestRunRulesNode:
 
+class TestRunRulesNode:
     def test_returns_matching_rules(self):
         """Rules engine evaluates and returns matches."""
         tag = make_tag()
@@ -186,7 +187,6 @@ class TestRunRulesNode:
 
 
 class TestMergeResultsNode:
-
     def test_rules_only_result(self):
         """Returns rules results when no LLM results."""
         tag = make_tag()
@@ -246,8 +246,8 @@ class TestMergeResultsNode:
 # End-to-End Tests
 # ─────────────────────────────────────────────
 
-class TestPipelineEndToEnd:
 
+class TestPipelineEndToEnd:
     @pytest.mark.asyncio
     async def test_rules_only_pipeline(self):
         """Full pipeline in RULES_ONLY mode — tag applied."""

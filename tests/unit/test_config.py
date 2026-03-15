@@ -5,6 +5,7 @@ TDD: RED before GREEN.
 Run: uv run pytest tests/unit/test_config.py -v --no-cov
 Expected: RED (ModuleNotFoundError)
 """
+
 import pytest
 from pydantic import ValidationError
 from pydantic_settings import SettingsConfigDict
@@ -14,13 +15,13 @@ from tagging.domain.enums import LLMProvider, TaggingMode
 
 
 class TestSettings:
-
-    def test_default_tagging_mode_is_hybrid(self):
+    def test_default_tagging_mode_is_hybrid(self, monkeypatch):
         """
         Hybrid must be the default.
         Best accuracy out of the box.
         Operators can downgrade if needed.
         """
+        monkeypatch.delenv("TAGGING_MODE", raising=False)
         settings = Settings(
             database_url="postgresql+asyncpg://user:pass@localhost/db",
             redis_url="redis://localhost:6379/0",
@@ -52,6 +53,7 @@ class TestSettings:
         monkeypatch.delenv("LLM_PROVIDER", raising=False)
         monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
         monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+
         # Subclass disables .env file so it can't supply DATABASE_URL
         class _Settings(Settings):
             model_config = SettingsConfigDict(
@@ -79,7 +81,7 @@ class TestSettings:
                 redis_url="redis://localhost:6379/0",
                 arq_redis_url="redis://localhost:6379/1",
                 llm_provider=LLMProvider.OLLAMA,
-                ollama_base_url=None,   # missing — must fail
+                ollama_base_url=None,  # missing — must fail
                 ollama_model="gemma2:9b",
             )
 
@@ -91,7 +93,7 @@ class TestSettings:
                 redis_url="redis://localhost:6379/0",
                 arq_redis_url="redis://localhost:6379/1",
                 llm_provider=LLMProvider.OPENAI,
-                openai_api_key=None,    # missing — must fail
+                openai_api_key=None,  # missing — must fail
             )
 
     def test_azure_requires_endpoint_and_key(self):
@@ -102,7 +104,7 @@ class TestSettings:
                 redis_url="redis://localhost:6379/0",
                 arq_redis_url="redis://localhost:6379/1",
                 llm_provider=LLMProvider.AZURE_OPENAI,
-                azure_openai_endpoint=None,   # missing — must fail
+                azure_openai_endpoint=None,  # missing — must fail
                 azure_openai_api_key=None,
             )
 
@@ -125,7 +127,9 @@ class TestSettings:
         This is the core feature of pydantic-settings.
         How Docker and production deployments configure the app.
         """
-        monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/db")
+        monkeypatch.setenv(
+            "DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/db"
+        )
         monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
         monkeypatch.setenv("ARQ_REDIS_URL", "redis://localhost:6379/1")
         monkeypatch.setenv("LLM_PROVIDER", "ollama")

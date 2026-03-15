@@ -17,8 +17,10 @@ from pydantic import BaseModel, field_validator
 # Request schemas
 # ─────────────────────────────────────────────
 
+
 class TagNoteRequest(BaseModel):
     """Request body for POST /tag."""
+
     note_id: str
     ro_id: str
     shop_id: str
@@ -35,8 +37,9 @@ class TagNoteRequest(BaseModel):
 
 class CreateRuleConditionRequest(BaseModel):
     """Single condition within a rule creation request."""
-    condition_type: str   # KEYWORD_ANY, KEYWORD_NONE, PHRASE, REGEX
-    operator: str         # AND, OR
+
+    condition_type: str  # KEYWORD_ANY, KEYWORD_NONE, PHRASE, REGEX
+    operator: str  # AND, OR
     values: list[str]
 
     @field_validator("values")
@@ -49,6 +52,7 @@ class CreateRuleConditionRequest(BaseModel):
 
 class CreateRuleRequest(BaseModel):
     """Request body for POST /rules."""
+
     tag_id: str
     name: str
     priority: int = 100
@@ -67,6 +71,7 @@ class CreateRuleRequest(BaseModel):
 
 class UpdateRuleRequest(BaseModel):
     """Request body for PUT /rules/{rule_id}."""
+
     name: str | None = None
     priority: int | None = None
     is_enabled: bool | None = None
@@ -77,8 +82,10 @@ class UpdateRuleRequest(BaseModel):
 # Response schemas
 # ─────────────────────────────────────────────
 
+
 class TagResponse(BaseModel):
     """Single tag in API responses."""
+
     id: str
     category_id: str
     name: str
@@ -92,14 +99,16 @@ class TagResponse(BaseModel):
 
 class TagResultResponse(BaseModel):
     """Single tag result from the tagging pipeline."""
+
     tag: TagResponse
     confidence: float
-    source: str       # RULES or LLM
+    source: str  # RULES or LLM
     reasoning: str
 
 
 class TagNoteResponse(BaseModel):
     """Response body for POST /tag."""
+
     note_id: str
     results: list[TagResultResponse]
     total: int
@@ -107,6 +116,7 @@ class TagNoteResponse(BaseModel):
 
 class RuleConditionResponse(BaseModel):
     """Single condition in rule responses."""
+
     id: str
     condition_type: str
     operator: str
@@ -115,6 +125,7 @@ class RuleConditionResponse(BaseModel):
 
 class RuleResponse(BaseModel):
     """Single rule in API responses."""
+
     id: str
     tag_id: str
     name: str
@@ -125,6 +136,7 @@ class RuleResponse(BaseModel):
 
 class CategoryResponse(BaseModel):
     """Single category in taxonomy responses."""
+
     id: str
     name: str
     slug: str
@@ -135,6 +147,7 @@ class CategoryResponse(BaseModel):
 
 class TaxonomyResponse(BaseModel):
     """Full taxonomy response."""
+
     categories: list[CategoryResponse]
     tags: list[TagResponse]
     total_categories: int
@@ -143,10 +156,14 @@ class TaxonomyResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
     version: str = "0.1.0"
+
+
 class CreateCategoryRequest(BaseModel):
     """Request body for POST /taxonomy/categories."""
+
     name: str
     slug: str
     description: str
@@ -156,6 +173,7 @@ class CreateCategoryRequest(BaseModel):
 
 class CreateTagRequest(BaseModel):
     """Request body for POST /taxonomy/tags."""
+
     category_id: str
     name: str
     slug: str

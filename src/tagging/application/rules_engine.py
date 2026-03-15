@@ -8,6 +8,7 @@ Must be fast: target <1ms per note.
 Pipeline position:
   NoteContext → RulesEngine → list[TagResult] → TagMerger
 """
+
 import re
 
 from tagging.domain.enums.condition_type import ConditionType
@@ -86,8 +87,7 @@ class RulesEngine:
         This implements the AND operator between conditions.
         """
         return all(
-            self._evaluate_condition(condition, text)
-            for condition in rule.conditions
+            self._evaluate_condition(condition, text) for condition in rule.conditions
         )
 
     def _evaluate_condition(
@@ -114,21 +114,14 @@ class RulesEngine:
 
         return False
 
-    def _keyword_any(
-        self, keywords: list[str], text: str
-    ) -> bool:
+    def _keyword_any(self, keywords: list[str], text: str) -> bool:
         """
         Returns True if ANY keyword is found in text.
         Case insensitive — technicians type in all caps sometimes.
         """
-        return any(
-            keyword.lower() in text
-            for keyword in keywords
-        )
+        return any(keyword.lower() in text for keyword in keywords)
 
-    def _keyword_none(
-        self, keywords: list[str], text: str
-    ) -> bool:
+    def _keyword_none(self, keywords: list[str], text: str) -> bool:
         """
         Returns True if NONE of the keywords are found.
         Used to exclude false positives.
@@ -141,26 +134,16 @@ class RulesEngine:
           text:   "waiting on parts — parts arrived today"
           result: False (exclusion keyword found → block tag)
         """
-        return not any(
-            keyword.lower() in text
-            for keyword in keywords
-        )
+        return not any(keyword.lower() in text for keyword in keywords)
 
-    def _phrase(
-        self, phrases: list[str], text: str
-    ) -> bool:
+    def _phrase(self, phrases: list[str], text: str) -> bool:
         """
         Returns True if ANY exact phrase is found.
         Case insensitive.
         """
-        return any(
-            phrase.lower() in text
-            for phrase in phrases
-        )
+        return any(phrase.lower() in text for phrase in phrases)
 
-    def _regex(
-        self, patterns: list[str], text: str
-    ) -> bool:
+    def _regex(self, patterns: list[str], text: str) -> bool:
         """
         Returns True if ANY regex pattern matches.
         Case insensitive flag applied automatically.
@@ -170,7 +153,4 @@ class RulesEngine:
           re.search checks anywhere in the string
           Notes are free-form text — search is correct.
         """
-        return any(
-            re.search(pattern, text, re.IGNORECASE)
-            for pattern in patterns
-        )
+        return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)

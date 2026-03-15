@@ -1,4 +1,5 @@
 """Unit tests for TagResult domain model."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -8,7 +9,6 @@ from tagging.domain.tag_result import TagResult
 
 
 class TestTagResult:
-
     def _make_tag(self) -> Tag:
         return Tag(
             id="uuid-2",

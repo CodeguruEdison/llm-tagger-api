@@ -6,6 +6,7 @@ Why dependencies:
   - Easy to override in tests
   - Automatically closed/cleaned up after each request
 """
+
 from collections.abc import AsyncGenerator
 
 from fastapi import Depends

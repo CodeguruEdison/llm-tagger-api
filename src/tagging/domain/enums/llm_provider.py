@@ -1,4 +1,5 @@
 """LLMProvider enum — supported LLM providers."""
+
 from enum import StrEnum
 
 

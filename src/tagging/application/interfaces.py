@@ -25,14 +25,17 @@ class ITagRepository(ABC):
     Any class that implements this can be used
     anywhere in the application.
     """
+
     @abstractmethod
-    async def get_all_categories(self)->list[TagCategory]:
+    async def get_all_categories(self) -> list[TagCategory]:
         """Get all active categories ordered by sort_order."""
         raise NotImplementedError
+
     @abstractmethod
-    async def get_tags_by_category(self,category_id:str)->list[Tag]:
+    async def get_tags_by_category(self, category_id: str) -> list[Tag]:
         """Get all active tags for a category."""
         raise NotImplementedError
+
     @abstractmethod
     async def get_all_active_tags(self) -> list[Tag]:
         """
@@ -40,15 +43,15 @@ class ITagRepository(ABC):
         Used by LLM chain to build taxonomy context.
         """
         raise NotImplementedError
+
     @abstractmethod
-    async def get_rules_for_tag(
-        self, tag_id: str
-    ) -> list[TagRule]:
+    async def get_rules_for_tag(self, tag_id: str) -> list[TagRule]:
         """
         Get all enabled rules for a tag ordered by priority.
         Used by rules engine to evaluate conditions.
         """
         raise NotImplementedError
+
     @abstractmethod
     async def get_all_active_rules(self) -> list[TagRule]:
         """
@@ -56,6 +59,7 @@ class ITagRepository(ABC):
         Loaded once at startup, cached in Redis.
         """
         raise NotImplementedError
+
     @abstractmethod
     async def save_tag_result(
         self,
@@ -69,14 +73,13 @@ class ITagRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_results_for_note(
-        self, note_id: str
-    ) -> list[TagResult]:
+    async def get_results_for_note(self, note_id: str) -> list[TagResult]:
         """
         Get all tag results for a note.
         Used by API to return current tags on a note.
         """
         raise NotImplementedError
+
     @abstractmethod
     async def get_all_rules(self) -> list[TagRule]:
         """Get all rules regardless of enabled status."""

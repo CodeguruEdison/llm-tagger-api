@@ -10,6 +10,7 @@ These tests verify:
 Run: uv run pytest tests/unit/test_db_models.py -v --no-cov
 
 """
+
 from sqlalchemy import inspect
 
 from tagging.infrastructure.db.models import (
@@ -21,7 +22,6 @@ from tagging.infrastructure.db.models import (
 
 
 class TestTagCategoryModel:
-
     def test_table_name(self):
         assert TagCategoryModel.__tablename__ == "tag_categories"
 
@@ -61,7 +61,6 @@ class TestTagCategoryModel:
 
 
 class TestTagModel:
-
     def test_table_name(self):
         assert TagModel.__tablename__ == "tags"
 
@@ -103,7 +102,6 @@ class TestTagModel:
 
 
 class TestTagRuleModel:
-
     def test_table_name(self):
         assert TagRuleModel.__tablename__ == "tag_rules"
 
@@ -120,7 +118,6 @@ class TestTagRuleModel:
 
 
 class TestTagRuleConditionModel:
-
     def test_table_name(self):
         assert TagRuleConditionModel.__tablename__ == "tag_rule_conditions"
 

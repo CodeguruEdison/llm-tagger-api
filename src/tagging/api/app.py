@@ -6,6 +6,7 @@ Why a factory function (create_app) instead of a module-level app:
   - Different configs for test vs production
   - Easier to add middleware and startup events
 """
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -29,8 +30,7 @@ async def lifespan(app: FastAPI):
 
     client = get_langfuse_client()
     msg = (
-        "Langfuse tracing ON → %s"
-        % (get_settings().langfuse_host or "default")
+        "Langfuse tracing ON → %s" % (get_settings().langfuse_host or "default")
         if client is not None
         else "Langfuse tracing OFF — set LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY in .env (get keys from http://localhost:3001)"
     )
@@ -41,7 +41,9 @@ async def lifespan(app: FastAPI):
     # shutdown: nothing to do
 
 
-async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSONResponse:
+async def integrity_error_handler(
+    _request: Request, exc: IntegrityError
+) -> JSONResponse:
     """Return 409 Conflict with JSON body for duplicate key / unique violations."""
     msg = str(exc.orig) if getattr(exc, "orig", None) else str(exc)
     return JSONResponse(

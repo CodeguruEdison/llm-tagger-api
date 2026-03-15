@@ -1,4 +1,5 @@
 """Unit tests for tagging router."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -30,7 +31,6 @@ def make_tag_result() -> TagResult:
 
 
 class TestTaggingRouter:
-
     def _client_with_mock_orchestrator(self, results):
         """Create test client with mocked orchestrator."""
         app = create_app()
@@ -42,12 +42,15 @@ class TestTaggingRouter:
     def test_tag_note_returns_results(self):
         """POST /tag returns tag results."""
         client = self._client_with_mock_orchestrator([make_tag_result()])
-        response = client.post("/tag", json={
-            "note_id": "note-1",
-            "ro_id": "ro-1",
-            "shop_id": "shop-1",
-            "text": "waiting on parts from LKQ",
-        })
+        response = client.post(
+            "/tag",
+            json={
+                "note_id": "note-1",
+                "ro_id": "ro-1",
+                "shop_id": "shop-1",
+                "text": "waiting on parts from LKQ",
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["note_id"] == "note-1"
@@ -59,12 +62,15 @@ class TestTaggingRouter:
     def test_tag_note_empty_results(self):
         """POST /tag returns empty results when no tags match."""
         client = self._client_with_mock_orchestrator([])
-        response = client.post("/tag", json={
-            "note_id": "note-1",
-            "ro_id": "ro-1",
-            "shop_id": "shop-1",
-            "text": "vehicle is ready for pickup",
-        })
+        response = client.post(
+            "/tag",
+            json={
+                "note_id": "note-1",
+                "ro_id": "ro-1",
+                "shop_id": "shop-1",
+                "text": "vehicle is ready for pickup",
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 0
@@ -73,10 +79,13 @@ class TestTaggingRouter:
     def test_tag_note_empty_text_returns_422(self):
         """POST /tag with empty text returns 422 validation error."""
         client = self._client_with_mock_orchestrator([])
-        response = client.post("/tag", json={
-            "note_id": "note-1",
-            "ro_id": "ro-1",
-            "shop_id": "shop-1",
-            "text": "   ",
-        })
+        response = client.post(
+            "/tag",
+            json={
+                "note_id": "note-1",
+                "ro_id": "ro-1",
+                "shop_id": "shop-1",
+                "text": "   ",
+            },
+        )
         assert response.status_code == 422

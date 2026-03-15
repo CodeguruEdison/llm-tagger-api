@@ -1,4 +1,5 @@
 """Unit tests for TagRuleCondition domain model."""
+
 import pytest
 from pydantic import ValidationError
 
@@ -7,7 +8,6 @@ from tagging.domain.tag_rule_condition import TagRuleCondition
 
 
 class TestTagRuleCondition:
-
     def _make_condition(self, **overrides) -> TagRuleCondition:
         defaults = {
             "id": "cond-1",

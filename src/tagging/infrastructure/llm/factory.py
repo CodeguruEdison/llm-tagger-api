@@ -9,7 +9,6 @@ Usage:
     llm = factory.create()  # returns BaseChatModel
 """
 
-
 from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
@@ -27,6 +26,7 @@ class LLMFactory:
       - Easy to mock in tests
       - Clear error if provider is misconfigured
     """
+
     def __init__(
         self,
         provider: LLMProvider,
@@ -56,6 +56,7 @@ class LLMFactory:
         self.azure_openai_api_version = azure_openai_api_version
         self.anthropic_api_key = anthropic_api_key
         self.anthropic_model = anthropic_model
+
     def create(self) -> BaseChatModel:
         """
         Create and return the configured LLM provider.
@@ -68,7 +69,7 @@ class LLMFactory:
                 return ChatOllama(
                     base_url=self.ollama_base_url,
                     model=self.ollama_model,
-                    temperature=0,      # deterministic output
+                    temperature=0,  # deterministic output
                 )
 
             case LLMProvider.OPENAI:
@@ -98,6 +99,7 @@ class LLMFactory:
                     f"Unsupported LLM provider: {self.provider}. "
                     f"Valid options: {[p.value for p in LLMProvider]}"
                 )
+
     @classmethod
     def from_settings(cls, settings) -> "LLMFactory":
         """
@@ -117,7 +119,3 @@ class LLMFactory:
             anthropic_api_key=settings.anthropic_api_key,
             anthropic_model=settings.anthropic_model,
         )
-
-
-
-

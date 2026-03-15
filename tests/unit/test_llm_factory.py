@@ -10,8 +10,8 @@ class TestLLMFactory:
     def test_return_ollama_provider(self):
         """Factory returns Ollama chat model when provider is OLLAMA."""
         with patch("tagging.infrastructure.llm.factory.ChatOllama") as mock:
-            factory =LLMFactory(
-                provider = LLMProvider.OLLAMA,
+            factory = LLMFactory(
+                provider=LLMProvider.OLLAMA,
                 ollama_base_url="http://localhost:11434",
                 ollama_model="llama3.2",
             )
@@ -28,6 +28,7 @@ class TestLLMFactory:
             )
             factory.create()
             mock.assert_called_once()
+
     def test_returns_azure_openai_provider(self):
         """Factory returns Azure OpenAI model when provider is AZURE_OPENAI."""
         with patch("tagging.infrastructure.llm.factory.AzureChatOpenAI") as mock:

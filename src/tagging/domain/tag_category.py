@@ -3,6 +3,7 @@ TagCategory domain model.
 Represents a category that groups related tags together.
 Fully DB-driven — no hardcoded values.
 """
+
 import re
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -28,10 +29,9 @@ class TagCategory(BaseModel):
     @field_validator("slug")
     @classmethod
     def slug_must_be_valid(cls, v: str) -> str:
-        if not re.match(r'^[a-z0-9-]+$', v):
+        if not re.match(r"^[a-z0-9-]+$", v):
             raise ValueError(
-                "slug must be lowercase alphanumeric with hyphens only. "
-                f"Got: '{v}'"
+                f"slug must be lowercase alphanumeric with hyphens only. Got: '{v}'"
             )
         return v
 
