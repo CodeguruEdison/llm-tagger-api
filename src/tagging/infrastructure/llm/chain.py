@@ -8,12 +8,16 @@ Responsibilities:
   4. Match slugs back to Tag domain objects
   5. Filter by confidence threshold
   6. Never crash — return empty list on any failure
+
+Langfuse: pass langfuse_handler from get_langfuse_callback_handler() so every
+LLM call is traced in Langfuse via the callback middleware.
 """
 import json
 import logging
-from typing import Any, cast
+from typing import Any
 
 from langchain_core.language_models import BaseChatModel
+from langchain_core.runnables import RunnableConfig
 
 from tagging.domain.enums.tag_source import TagSource
 from tagging.domain.note_context import NoteContext
@@ -29,12 +33,25 @@ class LLMChain:
     Wraps a LangChain LLM with our tagging prompt and output parsing.
 
     Usage:
-        chain = LLMChain(llm=factory.create())
+        handler = get_langfuse_callback_handler()
+        chain = LLMChain(llm=factory.create(), langfuse_handler=handler)
         results = await chain.run(context, tags, threshold=0.7)
     """
 
-    def __init__(self, llm: BaseChatModel) -> None:
+    def __init__(
+        self,
+        llm: BaseChatModel,
+        *,
+        langfuse_handler: Any | None = None,
+    ) -> None:
         self._llm = llm
+        self._langfuse_handler = langfuse_handler
+
+    def _run_config(self) -> RunnableConfig:
+        """Config for LLM invoke so all calls are traced when handler is set."""
+        if not self._langfuse_handler:
+            return {}
+        return {"callbacks": [self._langfuse_handler]}
 
     async def run(
         self,
@@ -48,7 +65,7 @@ class LLMChain:
         Steps:
           1. Build taxonomy string from tags
           2. Format prompt
-          3. Call LLM
+          3. Call LLM (with Langfuse callback if configured)
           4. Parse JSON
           5. Match slugs → Tag objects
           6. Filter by threshold
@@ -57,19 +74,6 @@ class LLMChain:
         """
         if not tags:
             return []
-        # Start Langfuse trace
-        from tagging.infrastructure.observability import get_langfuse_client
-        langfuse = get_langfuse_client()
-        trace = None
-        generation = None
-
-        if langfuse:
-            trace = cast(Any, langfuse).trace(
-                name="tag_note",
-                input={"note_id": context.note_id, "text": context.text},
-                metadata={"shop_id": context.shop_id, "ro_id": context.ro_id},
-            )
-
 
         try:
             # Build slug → Tag lookup for O(1) matching
@@ -81,18 +85,11 @@ class LLMChain:
                 taxonomy=taxonomy,
                 note_text=context.text,
             )
-            # Log generation start
-            if trace:
-                generation = trace.generation(
-                    name="llm_tagging",
-                    input=messages[1].content,
-                    model=getattr(self._llm, "model", "unknown"),
-                )
-                # Call LLM
-            response = await self._llm.ainvoke(messages)
-            # Log generation end
-            if generation:
-                generation.end(output=response.content)
+
+            response = await self._llm.ainvoke(
+                messages,
+                config=self._run_config(),
+            )
 
             # Parse JSON (content may be str or list for multimodal)
             content = response.content
@@ -109,27 +106,10 @@ class LLMChain:
                 result = self._build_result(item, tag_by_slug, threshold)
                 if result:
                     results.append(result)
-            # Log final results to trace
-            if trace:
-                trace.update(
-                    output={
-                        "tags": [r.tag.slug for r in results],
-                        "total": len(results),
-                    }
-                )
-            if langfuse:
-                cast(Any, langfuse).flush()
 
             return results
 
         except Exception as e:
-            if trace:
-                trace.update(
-                    output={"error": str(e)},
-                    level="ERROR",
-                )
-            if langfuse:
-                cast(Any, langfuse).flush()
             logger.warning("LLM chain failed: %s", str(e))
             return []
 

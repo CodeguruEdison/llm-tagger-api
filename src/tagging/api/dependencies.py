@@ -52,17 +52,24 @@ async def get_orchestrator(
     """
     Create an orchestrator for the request.
     Wires together repository + LLM chain based on settings.
+    Langfuse callback handler is injected when configured so all LLM and
+    pipeline runs are traced in one place.
     """
-    llm_chain = None
     from tagging.domain.enums.tagging_mode import TaggingMode
+    from tagging.infrastructure.observability import get_langfuse_callback_handler
+
+    llm_chain = None
+    langfuse_handler = get_langfuse_callback_handler()
+
     if settings.tagging_mode != TaggingMode.RULES_ONLY:
         factory = LLMFactory.from_settings(settings)
         llm = factory.create()
-        llm_chain = LLMChain(llm=llm)
+        llm_chain = LLMChain(llm=llm, langfuse_handler=langfuse_handler)
 
     return Orchestrator(
         repository=repository,
         tagging_mode=settings.tagging_mode,
         llm_confidence_threshold=settings.llm_confidence_threshold,
         llm_chain=llm_chain,
+        langfuse_handler=langfuse_handler,
     )

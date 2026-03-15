@@ -10,9 +10,12 @@ Responsibilities:
 
 This is the only place that knows about all the pieces.
 Everything else is injected — easy to test, easy to swap.
+
+Langfuse: pass langfuse_handler so the full pipeline run is traced as one trace
+in Langfuse (with nested LLM spans from the chain).
 """
 import logging
-from typing import Optional
+from typing import Any
 
 from tagging.application.interfaces import ITagRepository
 from tagging.application.pipeline import PIPELINE, PipelineState
@@ -33,6 +36,7 @@ class Orchestrator:
             tagging_mode=TaggingMode.HYBRID,
             llm_confidence_threshold=0.7,
             llm_chain=chain,   # optional, None for RULES_ONLY
+            langfuse_handler=handler,  # optional, traces pipeline + LLM in Langfuse
         )
         results = await orchestrator.tag_note(context)
     """
@@ -42,12 +46,14 @@ class Orchestrator:
         repository: ITagRepository,
         tagging_mode: TaggingMode = TaggingMode.HYBRID,
         llm_confidence_threshold: float = 0.7,
-        llm_chain: Optional[object] = None,
+        llm_chain: object | None = None,
+        langfuse_handler: Any | None = None,
     ) -> None:
         self._repository = repository
         self._tagging_mode = tagging_mode
         self._llm_confidence_threshold = llm_confidence_threshold
         self._llm_chain = llm_chain
+        self._langfuse_handler = langfuse_handler
 
     async def tag_note(
         self, context: NoteContext
@@ -83,8 +89,11 @@ class Orchestrator:
                 error=None,
             )
 
-            # Run pipeline
-            result_state = await PIPELINE.ainvoke(state)
+            # Run pipeline (with Langfuse callback so full run is one trace)
+            run_config = {}
+            if self._langfuse_handler:
+                run_config["callbacks"] = [self._langfuse_handler]
+            result_state = await PIPELINE.ainvoke(state, config=run_config)
 
             # Log any LLM errors — pipeline still returns rules results
             if result_state.get("error"):
