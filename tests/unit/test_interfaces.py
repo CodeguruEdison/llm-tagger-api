@@ -224,4 +224,3 @@ class TestITagRepository:
         result = await repo.get_all_active_rules()
         assert len(result) == 1
         assert result[0].name == "Active Rule"
-    

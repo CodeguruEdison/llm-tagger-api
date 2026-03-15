@@ -9,17 +9,17 @@ class TestTag:
 
     def _make_tag(self, **overrides) -> Tag:
         """Helper — avoids repeating valid tag data in every test."""
-        defaults = dict(
-            id="uuid-2",
-            category_id="uuid-1",
-            name="Parts Delay",
-            slug="parts-delay",
-            description="RO is waiting on parts",
-            color="#FF6B6B",
-            icon="clock",
-            priority=1,
-            is_active=True,
-        )
+        defaults = {
+            "id": "uuid-2",
+            "category_id": "uuid-1",
+            "name": "Parts Delay",
+            "slug": "parts-delay",
+            "description": "RO is waiting on parts",
+            "color": "#FF6B6B",
+            "icon": "clock",
+            "priority": 1,
+            "is_active": True,
+        }
         return Tag(**{**defaults, **overrides})
 
     def test_can_create_tag(self):

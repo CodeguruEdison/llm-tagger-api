@@ -53,7 +53,10 @@ class TestGetLangfuseClient:
 class TestCreateLangfuseCallbackHandler:
 
     def test_returns_none_tuple_when_not_configured(self, monkeypatch):
-        from tagging.infrastructure.observability import create_langfuse_callback_handler, get_langfuse_client
+        from tagging.infrastructure.observability import (
+            create_langfuse_callback_handler,
+            get_langfuse_client,
+        )
         get_langfuse_client.cache_clear()
         monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "")
         monkeypatch.setenv("LANGFUSE_SECRET_KEY", "")
@@ -66,7 +69,10 @@ class TestCreateLangfuseCallbackHandler:
         get_settings.cache_clear()
 
     def test_returns_trace_and_handler_when_configured(self, monkeypatch):
-        from tagging.infrastructure.observability import create_langfuse_callback_handler, get_langfuse_client
+        from tagging.infrastructure.observability import (
+            create_langfuse_callback_handler,
+            get_langfuse_client,
+        )
         get_langfuse_client.cache_clear()
         monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-lf-test")
         monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-test")

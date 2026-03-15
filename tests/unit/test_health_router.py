@@ -1,6 +1,7 @@
 """Unit tests for health check endpoint."""
 import pytest
 from fastapi.testclient import TestClient
+
 from tagging.api.app import create_app
 
 

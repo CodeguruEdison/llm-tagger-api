@@ -25,19 +25,17 @@ Nodes = pure logic, no routing decisions.
 Edges = all routing decisions live here.
 State = data flowing through every node.
 """
-from typing import Optional, Any
-from typing_extensions import TypedDict
+from typing import Any
 
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
+from typing_extensions import TypedDict
 
 from tagging.application.rules_engine import RulesEngine
 from tagging.domain.enums.tagging_mode import TaggingMode
-from tagging.domain.enums.tag_source import TagSource
 from tagging.domain.note_context import NoteContext
 from tagging.domain.tag import Tag
 from tagging.domain.tag_result import TagResult
 from tagging.domain.tag_rule import TagRule
-
 
 # ─────────────────────────────────────────────
 # Pipeline State
@@ -58,8 +56,8 @@ class PipelineState(TypedDict):
     final_results: list[TagResult]
     tagging_mode: TaggingMode
     llm_confidence_threshold: float
-    llm_chain: Optional[Any]        # injected by orchestrator, None in RULES_ONLY
-    error: Optional[str]
+    llm_chain: Any | None        # injected by orchestrator, None in RULES_ONLY
+    error: str | None
 
 
 # ─────────────────────────────────────────────

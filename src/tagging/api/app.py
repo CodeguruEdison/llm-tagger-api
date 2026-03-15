@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Startup: log Langfuse status so we can verify tracing from docker logs."""
     import sys
+
     from tagging.infrastructure.observability import get_langfuse_client
 
     client = get_langfuse_client()

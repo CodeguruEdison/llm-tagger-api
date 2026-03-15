@@ -1,7 +1,6 @@
 """Unit tests for taxonomy router."""
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from tagging.api.app import create_app
@@ -86,7 +85,7 @@ class TestTaxonomyRouter:
         data = response.json()
         assert data["total_categories"] == 0
         assert data["total_tags"] == 0
-    
+
     def test_create_category(self):
         """POST /taxonomy/categories creates and returns category."""
         app =create_app()
@@ -127,4 +126,3 @@ class TestTaxonomyRouter:
         data = response.json()
         assert data["name"] == "Parts Delay"
         assert data["slug"] == "parts-delay"
-            

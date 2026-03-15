@@ -1,8 +1,8 @@
 """ConditionType enum — how a rule condition matches text."""
-from enum import Enum
+from enum import StrEnum
 
 
-class ConditionType(str, Enum):
+class ConditionType(StrEnum):
     KEYWORD_ANY = "keyword_any"
     KEYWORD_NONE = "keyword_none"
     PHRASE = "phrase"

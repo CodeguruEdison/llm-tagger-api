@@ -10,7 +10,6 @@ Usage:
     print(settings.llm_provider)
 """
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -38,7 +37,7 @@ class Settings(BaseSettings):
 
     # ── Database ──────────────────────────────────────────
     database_url: str
-    direct_database_url: Optional[str] = None  # use when pgBouncer causes auth issues (e.g. Docker)
+    direct_database_url: str | None = None  # use when pgBouncer causes auth issues (e.g. Docker)
     database_pool_size: int = 20
     database_max_overflow: int = 10
 
@@ -56,27 +55,27 @@ class Settings(BaseSettings):
     llm_provider: LLMProvider
 
     # ── Ollama ────────────────────────────────────────────
-    ollama_base_url: Optional[str] = None
-    ollama_model: Optional[str] = "gemma2:9b"
+    ollama_base_url: str | None = None
+    ollama_model: str | None = "gemma2:9b"
 
     # ── OpenAI ────────────────────────────────────────────
-    openai_api_key: Optional[str] = None
-    openai_model: Optional[str] = "gpt-4o-mini"
+    openai_api_key: str | None = None
+    openai_model: str | None = "gpt-4o-mini"
 
     # ── Azure OpenAI ──────────────────────────────────────
-    azure_openai_endpoint: Optional[str] = None
-    azure_openai_api_key: Optional[str] = None
-    azure_openai_deployment: Optional[str] = None
-    azure_openai_api_version: Optional[str] = "2024-02-01"
+    azure_openai_endpoint: str | None = None
+    azure_openai_api_key: str | None = None
+    azure_openai_deployment: str | None = None
+    azure_openai_api_version: str | None = "2024-02-01"
 
     # ── Anthropic ─────────────────────────────────────────
-    anthropic_api_key: Optional[str] = None
-    anthropic_model: Optional[str] = "claude-3-5-haiku-20241022"
+    anthropic_api_key: str | None = None
+    anthropic_model: str | None = "claude-3-5-haiku-20241022"
 
     # ── Langfuse ──────────────────────────────────────────
-    langfuse_public_key: Optional[str] = None
-    langfuse_secret_key: Optional[str] = None
-    langfuse_host: Optional[str] = "http://localhost:3001"
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
+    langfuse_host: str | None = "http://localhost:3001"
 
     # ── Worker ────────────────────────────────────────────
     worker_max_jobs: int = 10

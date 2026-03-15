@@ -33,7 +33,7 @@ class TagRepository(ITagRepository):
     async def get_all_categories(self) -> list[TagCategory]:
         result = await self._session.execute(
             select(TagCategoryModel)
-            .where(TagCategoryModel.is_active == True)
+            .where(TagCategoryModel.is_active)
             .order_by(TagCategoryModel.sort_order)
         )
         return [row.to_domain() for row in result.scalars().all()]
@@ -45,7 +45,7 @@ class TagRepository(ITagRepository):
             select(TagModel)
             .where(
                 TagModel.category_id == category_id,
-                TagModel.is_active == True,
+                TagModel.is_active,
             )
             .order_by(TagModel.priority)
         )
@@ -54,7 +54,7 @@ class TagRepository(ITagRepository):
     async def get_all_active_tags(self) -> list[Tag]:
         result = await self._session.execute(
             select(TagModel)
-            .where(TagModel.is_active == True)
+            .where(TagModel.is_active)
             .order_by(TagModel.priority)
         )
         return [row.to_domain() for row in result.scalars().all()]
@@ -66,7 +66,7 @@ class TagRepository(ITagRepository):
             select(TagRuleModel)
             .where(
                 TagRuleModel.tag_id == tag_id,
-                TagRuleModel.is_enabled == True,
+                TagRuleModel.is_enabled,
             )
             .order_by(TagRuleModel.priority.desc())
         )
@@ -75,7 +75,7 @@ class TagRepository(ITagRepository):
     async def get_all_active_rules(self) -> list[TagRule]:
         result = await self._session.execute(
             select(TagRuleModel)
-            .where(TagRuleModel.is_enabled == True)
+            .where(TagRuleModel.is_enabled)
             .order_by(TagRuleModel.priority.desc())
         )
         return [row.to_domain() for row in result.scalars().all()]

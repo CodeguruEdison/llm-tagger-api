@@ -65,7 +65,9 @@ class LLMChain:
         # inside the trace so each request appears as one trace in the UI.
         trace, handler = None, None
         try:
-            from tagging.infrastructure.observability import create_langfuse_callback_handler
+            from tagging.infrastructure.observability import (
+                create_langfuse_callback_handler,
+            )
             trace, handler = create_langfuse_callback_handler(
                 note_id=context.note_id,
                 shop_id=context.shop_id,

@@ -17,7 +17,7 @@ class TestLLMFactory:
             )
             factory.create()
             mock.assert_called_once()
-            
+
     def test_returns_openai_provider(self):
         """Factory returns OpenAI chat model when provider is OPENAI."""
         with patch("tagging.infrastructure.llm.factory.ChatOpenAI") as mock:
@@ -27,7 +27,7 @@ class TestLLMFactory:
                 openai_model="gpt-4o-mini",
             )
             factory.create()
-            mock.assert_called_once()    
+            mock.assert_called_once()
     def test_returns_azure_openai_provider(self):
         """Factory returns Azure OpenAI model when provider is AZURE_OPENAI."""
         with patch("tagging.infrastructure.llm.factory.AzureChatOpenAI") as mock:

@@ -10,13 +10,14 @@ Why interfaces:
 This is the Dependency Injection pattern.
 """
 
-from abc import ABC,abstractmethod
+from abc import ABC, abstractmethod
 
-from tagging.domain.tag_category import TagCategory
-from tagging.domain.tag import Tag
-from tagging.domain.tag_rule import TagRule
-from tagging.domain.tag_result import TagResult
 from tagging.domain.note_context import NoteContext
+from tagging.domain.tag import Tag
+from tagging.domain.tag_category import TagCategory
+from tagging.domain.tag_result import TagResult
+from tagging.domain.tag_rule import TagRule
+
 
 class ITagRepository(ABC):
     """

@@ -1,11 +1,13 @@
 
 import pytest
+
 from tagging.domain.enums import (
-    ConditionType,
     ConditionOperator,
+    ConditionType,
     TaggingMode,
     TagSource,
 )
+
 
 class TestConditionType:
 

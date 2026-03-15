@@ -9,12 +9,12 @@ from tagging.domain.tag_rule_condition import TagRuleCondition
 class TestTagRuleCondition:
 
     def _make_condition(self, **overrides) -> TagRuleCondition:
-        defaults = dict(
-            id="cond-1",
-            condition_type=ConditionType.KEYWORD_ANY,
-            operator=ConditionOperator.AND,
-            values=["backordered", "waiting on parts"],
-        )
+        defaults = {
+            "id": "cond-1",
+            "condition_type": ConditionType.KEYWORD_ANY,
+            "operator": ConditionOperator.AND,
+            "values": ["backordered", "waiting on parts"],
+        }
         return TagRuleCondition(**{**defaults, **overrides})
 
     def test_can_create_condition(self):

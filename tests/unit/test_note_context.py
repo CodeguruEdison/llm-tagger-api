@@ -8,13 +8,13 @@ from tagging.domain.note_context import NoteContext
 class TestNoteContext:
 
     def _make_context(self, **overrides) -> NoteContext:
-        defaults = dict(
-            note_id="note-1",
-            ro_id="ro-1",
-            shop_id="shop-1",
-            text="waiting on parts from LKQ",
-            event_type="note",
-        )
+        defaults = {
+            "note_id": "note-1",
+            "ro_id": "ro-1",
+            "shop_id": "shop-1",
+            "text": "waiting on parts from LKQ",
+            "event_type": "note",
+        }
         return NoteContext(**{**defaults, **overrides})
 
     def test_can_create_note_context(self):

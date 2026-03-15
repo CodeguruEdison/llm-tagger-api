@@ -1,5 +1,4 @@
 """Unit tests for LLM prompt templates."""
-from pathlib import Path
 
 import pytest
 
@@ -8,7 +7,6 @@ from tagging.infrastructure.llm.prompts import (
     TAGGING_PROMPT,
     _load_template,
     build_taxonomy_context,
-    build_tagging_prompt,
 )
 
 

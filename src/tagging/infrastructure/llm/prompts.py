@@ -14,7 +14,6 @@ user.md    ← user prompt (note text + output format)
 
 from pathlib import Path
 
-
 from langchain_core.prompts import ChatPromptTemplate
 
 # Path to templates directory
@@ -70,4 +69,4 @@ def build_tagging_prompt() -> ChatPromptTemplate:
         ("human", user_template),
     ])
  # Build once at module load — templates are static files
-TAGGING_PROMPT = build_tagging_prompt()   
+TAGGING_PROMPT = build_tagging_prompt()

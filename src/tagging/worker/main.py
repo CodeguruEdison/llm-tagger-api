@@ -11,7 +11,6 @@ Usage:
 Docker (docker-compose):
   command: uv run python -m tagging.worker.main
 """
-import asyncio
 import logging
 
 from arq.connections import RedisSettings

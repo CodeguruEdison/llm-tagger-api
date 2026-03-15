@@ -6,12 +6,13 @@ Why dependencies:
   - Easy to override in tests
   - Automatically closed/cleaned up after each request
 """
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from tagging.application.orchestrator import Orchestrator
-from tagging.config import get_settings, Settings
+from tagging.config import Settings, get_settings
 from tagging.infrastructure.db.repository import TagRepository
 from tagging.infrastructure.llm.chain import LLMChain
 from tagging.infrastructure.llm.factory import LLMFactory

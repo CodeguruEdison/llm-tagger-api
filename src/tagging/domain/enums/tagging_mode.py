@@ -1,8 +1,8 @@
 """TaggingMode enum — controls which pipeline stages run."""
-from enum import Enum
+from enum import StrEnum
 
 
-class TaggingMode(str, Enum):
+class TaggingMode(StrEnum):
     RULES_ONLY = "rules_only"
     LLM_ONLY = "llm_only"
     HYBRID = "hybrid"

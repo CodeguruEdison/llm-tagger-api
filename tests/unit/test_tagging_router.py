@@ -1,7 +1,6 @@
 """Unit tests for tagging router."""
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from tagging.api.app import create_app

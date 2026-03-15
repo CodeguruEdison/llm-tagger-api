@@ -284,7 +284,6 @@ class TagResultModel(Base):
     )
 
     def to_domain(self, tag: Tag) -> TagResult:
-        from tagging.domain.enums.tag_source import TagSource
         return TagResult(
             tag=tag,
             confidence=self.confidence,

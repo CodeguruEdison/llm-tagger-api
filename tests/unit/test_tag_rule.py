@@ -18,14 +18,14 @@ class TestTagRule:
         )
 
     def _make_rule(self, **overrides) -> TagRule:
-        defaults = dict(
-            id="rule-1",
-            tag_id="uuid-2",
-            name="Parts Delay Detection",
-            priority=100,
-            is_enabled=True,
-            conditions=[self._make_condition()],
-        )
+        defaults = {
+            "id": "rule-1",
+            "tag_id": "uuid-2",
+            "name": "Parts Delay Detection",
+            "priority": 100,
+            "is_enabled": True,
+            "conditions": [self._make_condition()],
+        }
         return TagRule(**{**defaults, **overrides})
 
     def test_can_create_rule(self):

@@ -1,7 +1,7 @@
 """ConditionOperator enum — how conditions combine."""
-from enum import Enum
+from enum import StrEnum
 
 
-class ConditionOperator(str, Enum):
+class ConditionOperator(StrEnum):
     AND = "and"
     OR = "or"

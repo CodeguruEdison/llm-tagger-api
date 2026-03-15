@@ -1,4 +1,3 @@
-import pytest
 
 from tagging.application.rules_engine import RulesEngine
 from tagging.domain.enums.condition_operator import ConditionOperator

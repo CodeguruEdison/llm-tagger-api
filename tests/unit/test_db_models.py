@@ -10,14 +10,13 @@ These tests verify:
 Run: uv run pytest tests/unit/test_db_models.py -v --no-cov
 
 """
-import pytest
 from sqlalchemy import inspect
 
 from tagging.infrastructure.db.models import (
     TagCategoryModel,
     TagModel,
-    TagRuleModel,
     TagRuleConditionModel,
+    TagRuleModel,
 )
 
 

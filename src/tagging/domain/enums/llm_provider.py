@@ -1,8 +1,8 @@
 """LLMProvider enum — supported LLM providers."""
-from enum import Enum
+from enum import StrEnum
 
 
-class LLMProvider(str, Enum):
+class LLMProvider(StrEnum):
     OLLAMA = "ollama"
     OPENAI = "openai"
     AZURE_OPENAI = "azure_openai"

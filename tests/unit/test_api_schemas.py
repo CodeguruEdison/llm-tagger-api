@@ -3,10 +3,9 @@ import pytest
 from pydantic import ValidationError
 
 from tagging.api.schemas import (
-    TagNoteRequest,
-    CreateRuleRequest,
     CreateRuleConditionRequest,
-    UpdateRuleRequest,
+    CreateRuleRequest,
+    TagNoteRequest,
 )
 
 

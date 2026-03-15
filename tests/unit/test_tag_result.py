@@ -23,12 +23,12 @@ class TestTagResult:
         )
 
     def _make_result(self, **overrides) -> TagResult:
-        defaults = dict(
-            tag=self._make_tag(),
-            confidence=1.0,
-            source=TagSource.RULES,
-            reasoning="matched rule: Parts Delay Detection",
-        )
+        defaults = {
+            "tag": self._make_tag(),
+            "confidence": 1.0,
+            "source": TagSource.RULES,
+            "reasoning": "matched rule: Parts Delay Detection",
+        }
         return TagResult(**{**defaults, **overrides})
 
     def test_can_create_rules_result(self):

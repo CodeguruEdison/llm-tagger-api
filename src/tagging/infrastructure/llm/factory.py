@@ -9,11 +9,9 @@ Usage:
     llm = factory.create()  # returns BaseChatModel
 """
 
-from typing import Optional
-
-from langchain_core.language_models import BaseChatModel
 
 from langchain_anthropic import ChatAnthropic
+from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
@@ -33,19 +31,19 @@ class LLMFactory:
         self,
         provider: LLMProvider,
         # Ollama
-        ollama_base_url: Optional[str] = None,
-        ollama_model: Optional[str] = "llama3.2",
+        ollama_base_url: str | None = None,
+        ollama_model: str | None = "llama3.2",
         # OpenAI
-        openai_api_key: Optional[str] = None,
-        openai_model: Optional[str] = "gpt-4o-mini",
+        openai_api_key: str | None = None,
+        openai_model: str | None = "gpt-4o-mini",
         # Azure OpenAI
-        azure_openai_endpoint: Optional[str] = None,
-        azure_openai_api_key: Optional[str] = None,
-        azure_openai_deployment: Optional[str] = None,
-        azure_openai_api_version: Optional[str] = "2024-02-01",
+        azure_openai_endpoint: str | None = None,
+        azure_openai_api_key: str | None = None,
+        azure_openai_deployment: str | None = None,
+        azure_openai_api_version: str | None = "2024-02-01",
         # Anthropic
-        anthropic_api_key: Optional[str] = None,
-        anthropic_model: Optional[str] = "claude-3-5-haiku-20241022",
+        anthropic_api_key: str | None = None,
+        anthropic_model: str | None = "claude-3-5-haiku-20241022",
     ) -> None:
         self.provider = provider
         self.ollama_base_url = ollama_base_url
@@ -99,7 +97,7 @@ class LLMFactory:
                 raise ValueError(
                     f"Unsupported LLM provider: {self.provider}. "
                     f"Valid options: {[p.value for p in LLMProvider]}"
-                )  
+                )
     @classmethod
     def from_settings(cls, settings) -> "LLMFactory":
         """
@@ -119,7 +117,7 @@ class LLMFactory:
             anthropic_api_key=settings.anthropic_api_key,
             anthropic_model=settings.anthropic_model,
         )
-        
-    
+
+
 
 

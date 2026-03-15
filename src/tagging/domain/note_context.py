@@ -4,7 +4,7 @@ The input to the tagging pipeline.
 
 Every layer of the system speaks NoteContext in:
   - HTTP request → NoteContext
-  - ARQ job queue → NoteContext  
+  - ARQ job queue → NoteContext
   - Tests → NoteContext
 """
 from pydantic import BaseModel, ConfigDict, field_validator

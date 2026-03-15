@@ -8,6 +8,7 @@ PUT    /rules/{rule_id}    ← update rule
 DELETE /rules/{rule_id}    ← delete rule
 """
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from tagging.api.dependencies import get_repository

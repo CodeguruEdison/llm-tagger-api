@@ -6,6 +6,7 @@ GET /taxonomy/categories   ← list categories
 GET /taxonomy/tags         ← list all tags
 """
 import uuid
+
 from fastapi import APIRouter, Depends, status
 
 from tagging.api.dependencies import get_repository

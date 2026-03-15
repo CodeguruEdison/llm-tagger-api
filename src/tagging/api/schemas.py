@@ -10,9 +10,8 @@ Why separate schemas:
   - Input validation happens here (Pydantic)
   - Output formatting happens here
 """
-from typing import Optional
-from pydantic import BaseModel, field_validator
 
+from pydantic import BaseModel, field_validator
 
 # ─────────────────────────────────────────────
 # Request schemas
@@ -68,10 +67,10 @@ class CreateRuleRequest(BaseModel):
 
 class UpdateRuleRequest(BaseModel):
     """Request body for PUT /rules/{rule_id}."""
-    name: Optional[str] = None
-    priority: Optional[int] = None
-    is_enabled: Optional[bool] = None
-    conditions: Optional[list[CreateRuleConditionRequest]] = None
+    name: str | None = None
+    priority: int | None = None
+    is_enabled: bool | None = None
+    conditions: list[CreateRuleConditionRequest] | None = None
 
 
 # ─────────────────────────────────────────────
